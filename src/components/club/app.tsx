@@ -1,6 +1,8 @@
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Delete, History, Lock, SlidersHorizontal } from "lucide-react";
 import { Toaster } from "sonner";
+import { ArrangeBar, useArrange, type ArrangeBind } from "@/components/club/arrange";
+import { KeyMenu, rectOf, useLongPress, type KeyMenuTarget } from "@/components/club/key-menu";
 import { NowProvider, useNow } from "@/components/club/now";
 import { Onboarding } from "@/components/club/onboarding";
 import { Tour } from "@/components/club/tour";
@@ -20,6 +22,7 @@ import {
   sessionLabel,
 } from "@/lib/club/logic";
 import { useClub } from "@/lib/club/store";
+import { useT } from "@/lib/i18n/use-t";
 
 // Inside Telegram, report the club to the server and take back Premium / admin access.
 // Runs on open, when the club's name or size changes, and when the app comes back to front
@@ -81,12 +84,29 @@ function ClubScreen() {
   const focusId = useClub((s) => s.focusId);
   const entry = useClub((s) => s.entry);
   const settings = useClub((s) => s.settings);
+  const sheetsOpen = useClub((s) => s.sheets.length > 0);
+  const t = useT();
+  const arrange = useArrange();
+  const arranging = arrange.arranging;
+  const [menu, setMenu] = useState<KeyMenuTarget | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  const openUnitMenu = useCallback(
+    (n: number, locked: boolean, el: HTMLElement) => setMenu({ kind: "unit", n, locked, rect: rectOf(el) }),
+    [],
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const tag = (event.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       const api = useClub.getState();
+      if (api.arranging) {
+        if (event.key === "Escape" || event.key === "Enter") {
+          event.preventDefault();
+          api.stopArranging();
+        }
+        return;
+      }
       if (api.sheets.length && event.key !== "Escape") return;
       if (event.key >= "1" && event.key <= "9") {
         event.preventDefault();
@@ -117,6 +137,15 @@ function ClubScreen() {
   const focused = sessions.find((s) => s.id === focusId) ?? null;
   const walkins = sessions.filter((s) => s.kind === "walkin").length;
   const typing = entry !== null;
+
+  // The key menu and arrange mode only live on the plain keypad (no sheet, no amount typing).
+  useEffect(() => {
+    if (typing || sheetsOpen || arranging) setMenu(null);
+  }, [typing, sheetsOpen, arranging]);
+
+  useEffect(() => {
+    if (typing && arranging) useClub.getState().stopArranging();
+  }, [typing, arranging]);
   const openTotal = sessions.reduce(
     (sum, session) => sum + quote(session, now, settings.roundUp).total,
     0,
@@ -144,12 +173,29 @@ function ClubScreen() {
     }
     if (focused.discountPct) hint += ` · −${focused.discountPct}%`;
   }
+  if (arranging) hint = t("arrange.hint");
 
   const barQty = focused?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0;
   const paused = Boolean(focused?.pauseStartedAt);
 
+  // Grid slot of a non-unit key: CSS order follows the saved layout, so the keys keep their
+  // place in the markup and the unit block (UNIT_BLOCK_ORDER) stays between slots 3 and 4.
+  const slot = (id: string): KeySlot => {
+    const index = arrange.order.indexOf(id);
+    return {
+      order: index < 4 ? index * 2 : index * 2 + 2,
+      bind: arrange.bind(id, index),
+      lifted: menu?.kind === "key" && menu.id === id,
+      onLongPress: typing || arranging ? undefined : (el) => setMenu({ kind: "key", id, rect: rectOf(el) }),
+    };
+  };
+
   const onDisplay = () => {
     const api = useClub.getState();
+    if (api.arranging) {
+      api.stopArranging();
+      return;
+    }
     if (api.entry) return;
     if (api.focusId) api.pressHisob();
     else api.pushSheet({ kind: "history" });
@@ -157,7 +203,10 @@ function ClubScreen() {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-bg text-fg">
-      <header className="flex items-center justify-between px-4 pt-3" data-tour="header">
+      <header
+        className={cn("flex items-center justify-between px-4 pt-3", arranging && "invisible")}
+        data-tour="header"
+      >
         <button
           type="button"
           className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
@@ -194,11 +243,12 @@ function ClubScreen() {
       </button>
 
       <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label="Boshqaruv">
-        <Key kind="symbol" tone="fn" tour="clear" ariaLabel="Bekor qilish" onClick={() => useClub.getState().pressUndo()}>
+        <Key slot={slot("undo")} kind="symbol" tone="fn" tour="clear" ariaLabel="Bekor qilish" onClick={() => useClub.getState().pressUndo()}>
           <Delete className="size-6" strokeWidth={1.75} />
         </Key>
-        <Key kind="symbol" tone="fn" tour="clear" label="AC" ariaLabel="Tozalash" onClick={() => useClub.getState().pressAC()} />
+        <Key slot={slot("ac")} kind="symbol" tone="fn" tour="clear" label="AC" ariaLabel="Tozalash" onClick={() => useClub.getState().pressAC()} />
         <Key
+          slot={slot("discount")}
           kind={focused && focused.discountPct && !typing ? "word" : "symbol"}
           tone="fn"
           active={Boolean(focused && focused.discountPct > 0 && !typing)}
@@ -209,6 +259,7 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressDiscount()}
         />
         <Key
+          slot={slot("bar")}
           kind="word"
           tone="op"
           label="BAR"
@@ -219,10 +270,18 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressBar()}
         />
 
-        <div className="relative col-span-3 row-span-3">
-          {typing ? <DigitBlock /> : <TableGrid now={now} />}
+        <div
+          className={cn("relative col-span-3 row-span-3 transition-opacity", arranging && "pointer-events-none opacity-35")}
+          style={{ order: UNIT_BLOCK_ORDER }}
+        >
+          {typing ? (
+            <DigitBlock />
+          ) : (
+            <TableGrid now={now} menuUnit={menu?.kind === "unit" ? menu.n : null} onMenu={arranging ? undefined : openUnitMenu} />
+          )}
         </div>
         <Key
+          slot={slot("pause")}
           kind="word"
           tone="op"
           active={paused && !typing}
@@ -233,6 +292,7 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressPause()}
         />
         <Key
+          slot={slot("remove")}
           kind="word"
           tone="op"
           label="AYIR"
@@ -242,6 +302,7 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressRemove()}
         />
         <Key
+          slot={slot("add")}
           kind="word"
           tone="op"
           active={typing}
@@ -252,6 +313,7 @@ function ClubScreen() {
         />
 
         <Key
+          slot={slot("transfer")}
           kind="word"
           tone="fn"
           label="KO'CH"
@@ -261,6 +323,7 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressTransfer()}
         />
         <Key
+          slot={slot("walkin")}
           kind={typing ? "digit" : "digit"}
           tone="num"
           label="0"
@@ -272,6 +335,7 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressWalkin()}
         />
         <Key
+          slot={slot("vip")}
           kind={typing ? "symbol" : "word"}
           tone="fn"
           active={!typing && Boolean(focused?.vip)}
@@ -280,8 +344,19 @@ function ClubScreen() {
           ariaLabel={typing ? "Ming qo'shish" : "VIP narx"}
           onClick={() => useClub.getState().pressVip()}
         />
-        <Key kind="word" tone="op" tour="hisob" label="HISOB" ariaLabel="Hisob" onClick={() => useClub.getState().pressHisob()} />
+        <Key slot={slot("hisob")} kind="word" tone="op" tour="hisob" label="HISOB" ariaLabel="Hisob" onClick={() => useClub.getState().pressHisob()} />
       </section>
+      {menu ? (
+        <KeyMenu
+          target={menu}
+          onClose={closeMenu}
+          onArrange={() => {
+            setMenu(null);
+            useClub.getState().startArranging();
+          }}
+        />
+      ) : null}
+      {arranging ? <ArrangeBar onReset={arrange.reset} canReset={!arrange.isDefault} /> : null}
     </main>
   );
 }
@@ -312,7 +387,17 @@ function gridColumns(count: number) {
   return 5;
 }
 
-function TableGrid({ now }: { now: number }) {
+type UnitMenuOpener = (n: number, locked: boolean, el: HTMLElement) => void;
+
+function TableGrid({
+  now,
+  menuUnit,
+  onMenu,
+}: {
+  now: number;
+  menuUnit: number | null;
+  onMenu?: UnitMenuOpener;
+}) {
   const premium = useClub((s) => s.settings.premium);
   const tableCount = useClub((s) => s.settings.tableCount);
   // Free clubs see the whole 3×3 block, Premium clubs exactly their tables.
@@ -321,21 +406,26 @@ function TableGrid({ now }: { now: number }) {
   const cols = gridColumns(shown);
   const compact = cols > 3;
   return (
-    <div className="no-scrollbar absolute inset-0 overflow-y-auto" data-tour="tables">
-      <div
-        className={cn("grid", compact ? "gap-2" : "gap-3")}
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: shown }, (_, i) => (
-          <TableKey
-            key={i + 1}
-            n={i + 1}
-            now={now}
-            compact={compact}
-            locked={!premium && i + 1 > FREE_TABLE_LIMIT}
-            off={i + 1 > usable}
-          />
-        ))}
+    <div className="absolute inset-0" data-tour="tables">
+      {/* 4px of bleed so a key lifted by the key menu isn't clipped by the scroll box. */}
+      <div className="no-scrollbar absolute -inset-1 overflow-y-auto p-1">
+        <div
+          className={cn("grid", compact ? "gap-2" : "gap-3")}
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: shown }, (_, i) => (
+            <TableKey
+              key={i + 1}
+              n={i + 1}
+              now={now}
+              compact={compact}
+              locked={!premium && i + 1 > FREE_TABLE_LIMIT}
+              off={i + 1 > usable}
+              lifted={menuUnit === i + 1}
+              onMenu={onMenu}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -347,14 +437,19 @@ function TableKey({
   compact,
   locked,
   off,
+  lifted,
+  onMenu,
 }: {
   n: number;
   now: number;
   compact: boolean;
   locked: boolean;
   off: boolean;
+  lifted: boolean;
+  onMenu?: UnitMenuOpener;
 }) {
   const session = useClub((s) => s.sessions.find((x) => x.kind === "table" && x.table === n));
+  const lockedPress = useLongPress(onMenu && locked && off && !session ? (el) => onMenu(n, true, el) : undefined);
   const focusId = useClub((s) => s.focusId);
   const focused = Boolean(session) && session?.id === focusId;
   const paused = Boolean(session?.pauseStartedAt);
@@ -368,7 +463,12 @@ function TableKey({
         aria-label={locked ? `Stol ${n} — Premium` : `Stol ${n} — o'chiq`}
         disabled={!locked}
         data-tour={n === FREE_TABLE_LIMIT + 1 ? "locked" : undefined}
-        onClick={() => useClub.getState().pressTable(n)}
+        {...lockedPress.handlers}
+        onClick={() => {
+          if (lockedPress.consume()) return;
+          useClub.getState().pressTable(n);
+        }}
+        style={keyStyle(lifted)}
         className="key relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
       >
         <span className={cn(labelClass("digit", false, compact), "leading-none")}>{n}</span>
@@ -392,9 +492,29 @@ function TableKey({
       live={Boolean(session) && !focused && !paused}
       paused={paused && !focused}
       ariaLabel={`Stol ${n}`}
+      slot={{ lifted, onLongPress: onMenu ? (el) => onMenu(n, locked, el) : undefined }}
       onClick={() => useClub.getState().pressTable(n)}
     />
   );
+}
+
+// Where a key sits and how it behaves beyond a tap: grid order (non-unit keys), the key-menu
+// lift, long-press, and arrange-mode drag handlers.
+type KeySlot = {
+  order?: number;
+  bind?: ArrangeBind;
+  lifted?: boolean;
+  onLongPress?: (el: HTMLElement) => void;
+};
+
+// Grid order of the unit block: between non-unit slots 3 (order 6) and 4 (order 10).
+const UNIT_BLOCK_ORDER = 7;
+
+// A key held for its menu floats above the dimmed screen.
+function keyStyle(lifted: boolean | undefined, order?: number): CSSProperties {
+  const style: CSSProperties = { WebkitTouchCallout: "none", order };
+  if (!lifted) return style;
+  return { ...style, scale: "1.08", zIndex: 60, ["--key-shadow" as string]: "0 14px 36px rgb(0 0 0 / 0.45)" };
 }
 
 function toneClass(tone: "num" | "fn" | "op", active: boolean) {
@@ -424,6 +544,7 @@ function Key({
   compact = false,
   tour,
   ariaLabel,
+  slot,
   onClick,
   children,
 }: {
@@ -439,24 +560,34 @@ function Key({
   compact?: boolean;
   tour?: string;
   ariaLabel: string;
+  slot?: KeySlot;
   onClick: () => void;
   children?: ReactNode;
 }) {
+  const press = useLongPress(slot?.onLongPress);
+  const { className: arrangeClass, style: arrangeStyle, ...arrangeProps }: Partial<ArrangeBind> = slot?.bind ?? {};
+  // While arranging, a key only drags: its tap does nothing.
+  const arranging = Boolean(arrangeProps.onPointerDown);
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       disabled={disabled}
       data-tour={tour}
+      {...(arranging ? null : press.handlers)}
+      {...arrangeProps}
       onClick={() => {
+        if (press.consume() || arranging) return;
         if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(8);
         onClick();
       }}
+      style={{ ...keyStyle(slot?.lifted, slot?.order), ...arrangeStyle }}
       className={cn(
         "key relative flex aspect-square items-center justify-center rounded-full",
         toneClass(tone, Boolean(active)),
         live && "key-live",
         paused && "key-paused",
+        arrangeClass,
       )}
     >
       {badge ? (

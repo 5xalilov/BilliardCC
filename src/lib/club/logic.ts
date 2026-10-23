@@ -80,6 +80,8 @@ export type Settings = {
   lang: Lang;
   business: BusinessKind;
   units: Record<string, UnitConfig>;
+  // Non-unit keypad keys in slot order (ids from DEFAULT_SETTINGS.keyLayout); set in arrange mode.
+  keyLayout: string[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -96,6 +98,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lang: "uz",
   business: "billiard",
   units: {},
+  keyLayout: ["undo", "ac", "discount", "bar", "pause", "remove", "add", "transfer", "walkin", "vip", "hisob"],
 };
 
 export function tableLimit(settings: Pick<Settings, "premium">) {

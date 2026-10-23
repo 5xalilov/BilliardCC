@@ -78,6 +78,8 @@ type State = {
   sheets: Sheet[];
   entry: { buffer: string } | null;
   undo: Undo[];
+  // Keypad arrange mode (not persisted): keys wiggle and can be dragged onto each other.
+  arranging: boolean;
   pressTable: (n: number) => void;
   pressWalkin: () => void;
   pressAC: () => void;
@@ -114,6 +116,10 @@ type State = {
   markPremiumRequested: () => void;
   toggleVipTable: (table: number) => void;
   setClubName: (name: string) => void;
+  setKeyLayout: (order: string[]) => void;
+  resetKeyLayout: () => void;
+  startArranging: () => void;
+  stopArranging: () => void;
 };
 
 function needFocus() {
@@ -244,6 +250,7 @@ export const useClub = create<State>()(
         sheets: [],
         entry: null,
         undo: [],
+        arranging: false,
 
         pressTable: (n) => {
           const st = get();
@@ -710,6 +717,19 @@ export const useClub = create<State>()(
           set((st) => ({
             settings: { ...st.settings, clubName: name.trim() || "Bilyard klub" },
           })),
+
+        setKeyLayout: (order) => set((st) => ({ settings: { ...st.settings, keyLayout: [...order] } })),
+
+        resetKeyLayout: () =>
+          set((st) => ({ settings: { ...st.settings, keyLayout: [...DEFAULT_SETTINGS.keyLayout] } })),
+
+        // Not while an amount is being typed: the keys are digits then.
+        startArranging: () => {
+          if (get().entry) return;
+          set({ arranging: true, sheets: [] });
+        },
+
+        stopArranging: () => set({ arranging: false }),
       };
     },
     {
