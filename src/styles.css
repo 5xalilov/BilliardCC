@@ -1,20 +1,52 @@
 @import "tailwindcss";
 
+/* STOL brand palette — "Tun" (night) is the default; "Kun" (day) below.
+   Stol Orange #ff7d0a is identical in both modes and always carries dark text.
+   Brand book: docs/brand/STOL.md · contrast audit: docs/brand/stol-palette.json */
 @theme {
-  /* "Felt & Brass" — sourced from Figma Material 3 Design Kit (Green DT / Yellow DT schemes).
-     See docs/color-palette.md for roles, sources and contrast results. */
-  --color-bg: #0b0f0b;
-  --color-fg: #f1f4ec;
-  --color-muted: #c1c9be;
-  --color-key: #272b26;
-  --color-fn: #3a4b3a;
-  --color-op: #e9c16c;
-  --color-on-op: #3f2e00;
-  --color-live: #9cd49f;
-  --color-sheet: #1c211c;
-  --color-elev: #313630;
-  --color-line: #424940;
+  --color-bg: #000000;
+  --color-sheet: #171514;
+  --color-key: #322f2c;
+  --color-elev: #2e2b28;
+  --color-fn: #5a554f;
+  --color-line: #3d3936;
+  --color-fg: #f7f6f4;
+  --color-muted: #c2bcb4;
+  --color-op: #ff7d0a;
+  --color-on-op: #160a00;
+  --color-op-ink: #ff9a3d;
+  --color-live: #ff7d0a;
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f7f6f4;
+  --color-sheet: #ffffff;
+  --color-key: #e1dcd4;
+  --color-elev: #e9e4dc;
+  --color-fn: #c9c1b6;
+  --color-line: #d2ccc2;
+  --color-fg: #151311;
+  --color-muted: #5c5650;
+  --color-op-ink: #a84400;
+  --color-live: #a84400;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --color-bg: #f7f6f4;
+    --color-sheet: #ffffff;
+    --color-key: #e1dcd4;
+    --color-elev: #e9e4dc;
+    --color-fn: #c9c1b6;
+    --color-line: #d2ccc2;
+    --color-fg: #151311;
+    --color-muted: #5c5650;
+    --color-op-ink: #a84400;
+    --color-live: #a84400;
+  }
 }
 
 @layer base {

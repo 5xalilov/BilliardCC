@@ -31,32 +31,46 @@ Read on demand:
 
 ## Non-negotiables
 
-1. **Roles before hues.** Define the roles first (canvas, surfaces ×2–3, text
+1. **The owner's brand comes first.** Before sourcing anything, extract the
+   colours the product already owns — logo, favicon, OG/share image, store
+   screenshots — and sample them (`public/og.jpg`, `public/favicon.svg`).
+   Re-skinning a brand into a library palette erases its identity; your job
+   is to keep the brand hue and *fix* the system around it (on-colour,
+   neutrals, states, light/dark). Replace the brand hue only when the owner
+   asks. Also swap out platform defaults (e.g. iOS `#FF9F0A`, Material
+   baseline purple): every clone shares them, so they can't identify a brand.
+   Library kits (Figma, Material, iOS) are for *structure* — role names,
+   elevation steps, mode pairs — not for the brand hue.
+2. **Ship both modes.** A palette is a day + night pair from the start: the
+   brand hue stays identical, neutrals invert, and accent *text* gets its own
+   darker ink token for light backgrounds.
+3. **Roles before hues.** Define the roles first (canvas, surfaces ×2–3, text
    ×2–3, line, primary action, secondary action, live/success, warning,
    danger, focus). Only then pick hues to fill them. Never ship a palette that
    is just "5 nice colours".
-2. **60 · 30 · 10.** ~60 % neutral canvas, ~30 % surfaces/secondary, ≤10 %
+4. **60 · 30 · 10.** ~60 % neutral canvas, ~30 % surfaces/secondary, ≤10 %
    accent. The accent is a *signal*; if everything is accent nothing is.
-3. **One primary accent, one optional secondary.** More than two saturated
+5. **One primary accent, one optional secondary.** More than two saturated
    hues on a working screen reads as noise. Status colours (live / warn /
    danger) are separate and appear only when state says so.
-4. **Contrast is measured, never eyeballed.** Body text ≥ 4.5:1 (WCAG AA) and
-   APCA |Lc| ≥ 60; large numerals/labels ≥ 3:1 and |Lc| ≥ 45; boundaries that
+6. **Contrast is measured, never eyeballed.** WCAG 2.x is the hard gate; APCA
+   is advisory (the script flags `apca-low`). Body text ≥ 4.5:1 and, where
+   reachable, APCA |Lc| ≥ 60; large numerals/labels ≥ 3:1 and |Lc| ≥ 45; boundaries that
    are the *only* way to see a control (outline buttons, focus and state
    rings) ≥ 3:1. Filled surfaces whose label already identifies them need
    only visible separation (≥ 1.25:1, `sep` in the script). Text *on* the
    accent must pass too — this is where most palettes fail (white on orange
    is ~2.1:1).
-5. **Never encode state by hue alone.** Pair colour with shape, label, icon,
+7. **Never encode state by hue alone.** Pair colour with shape, label, icon,
    ring or position so deuteranopes (≈ 8 % of men) can operate the UI. Check
    red/green pairs especially.
-6. **Dark UI ≠ inverted light UI.** Use near-black, not pure #000, for
+8. **Dark UI ≠ inverted light UI.** Use near-black, not pure #000, for
    surfaces that elevate; raise elevation with lighter surfaces, not shadows;
    desaturate accents ~10–20 % so they don't vibrate on dark backgrounds.
-7. **Tokens, not literals.** Output lives in `src/styles.css` `@theme` as
+9. **Tokens, not literals.** Output lives in `src/styles.css` `@theme` as
    `--color-*`. Components reference tokens (`bg-op`, `text-muted`); no hex
    in TSX. Keep existing token names when re-skinning so nothing breaks.
-8. **Cite the source.** When a palette comes from Figma, record the library /
+10. **Cite the source.** When a palette comes from Figma, record the library /
    file and the variable or style names it came from, and note every value
    you adjusted and why (usually contrast).
 
@@ -66,7 +80,8 @@ Read on demand:
    tokens and which roles they serve. Screenshot the current UI.
 2. **Moodboard words → hue families.** e.g. billiards → felt green, cloth
    blue, walnut/leather, brass, chalk blue, ivory ball, 8-ball black.
-3. **Source from Figma** — `search_design_system` for variables/styles
+3. **Sample the existing brand** (logo, favicon, OG image), then **source
+   structure from Figma** — `search_design_system` for variables/styles
    (`primary`, `surface`, `background`, `accent`, `success`…) across the
    community UI kits and libraries the account can see. Collect 3–6
    candidate palettes with their exact hex values. See

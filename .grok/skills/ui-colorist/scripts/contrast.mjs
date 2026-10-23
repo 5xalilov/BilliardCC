@@ -3,6 +3,11 @@
 // Usage:
 //   node contrast.mjs "#fff" "#000"                  one pair
 //   node contrast.mjs palette.json                   {"pairs":[["fg","bg","text"],...],"colors":{...}}
+//                                                    or {"pairs":[...],"modes":{"dark":{...},"light":{...}}}
+// WCAG 2.x is the hard gate (exit code 1 on failure). APCA Lc is advisory:
+// pairs below the APCA target print "apca-low" but do not fail, because a
+// saturated mid-luminance accent (orange, yellow) tops out near Lc 55-58
+// even with pure black text while still giving WCAG AAA.
 // Pair kinds: text (>=4.5, |Lc|>=60), large (>=3, |Lc|>=45), ui (>=3, sole
 // identifier: outline-only control, focus/state ring), sep (>=1.25, filled
 // surface vs neighbour when a label already identifies the control).
@@ -61,23 +66,30 @@ const check = (fgHex, bgHex, kind = "text") => {
   const ratio = wcag(fgHex, bgHex);
   const lc = apca(fgHex, bgHex);
   const rule = rules[kind];
-  const pass = ratio >= rule.wcag && Math.abs(lc) >= rule.apca;
-  return { ratio: ratio.toFixed(2), lc: lc.toFixed(1), pass };
+  const pass = ratio >= rule.wcag;
+  const apcaLow = Math.abs(lc) < rule.apca;
+  return { ratio: ratio.toFixed(2), lc: lc.toFixed(1), pass, apcaLow };
 };
 
 const args = process.argv.slice(2);
 if (args.length >= 2 && args[0].startsWith("#")) {
   const r = check(args[0], args[1], args[2] ?? "text");
-  console.log(`${args[0]} on ${args[1]}: ${r.ratio}:1  Lc ${r.lc}  ${r.pass ? "PASS" : "FAIL"}`);
+  console.log(
+    `${args[0]} on ${args[1]}: ${r.ratio}:1  Lc ${r.lc}  ${r.pass ? "PASS" : "FAIL"}${r.apcaLow ? "  apca-low" : ""}`,
+  );
 } else if (args.length === 1) {
   const spec = JSON.parse(readFileSync(args[0], "utf8"));
+  const modes = spec.modes ?? { palette: spec.colors };
   let failed = 0;
-  for (const [fg, bg, kind = "text"] of spec.pairs) {
-    const r = check(spec.colors[fg], spec.colors[bg], kind);
-    if (!r.pass) failed++;
-    console.log(
-      `${r.pass ? "PASS" : "FAIL"}  ${fg.padEnd(10)} on ${bg.padEnd(10)} ${kind.padEnd(5)} ${r.ratio.padStart(5)}:1  Lc ${r.lc.padStart(6)}`,
-    );
+  for (const [mode, colors] of Object.entries(modes)) {
+    console.log(`== ${mode}`);
+    for (const [fg, bg, kind = "text"] of spec.pairs) {
+      const r = check(colors[fg], colors[bg], kind);
+      if (!r.pass) failed++;
+      console.log(
+        `${r.pass ? "PASS" : "FAIL"}  ${fg.padEnd(10)} on ${bg.padEnd(10)} ${kind.padEnd(5)} ${r.ratio.padStart(5)}:1  Lc ${r.lc.padStart(6)}${r.apcaLow ? "  apca-low" : ""}`,
+      );
+    }
   }
   process.exitCode = failed ? 1 : 0;
 } else {

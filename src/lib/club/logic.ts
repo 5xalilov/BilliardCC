@@ -52,6 +52,8 @@ export type Bill = {
   voided: boolean;
 };
 
+export type ThemeMode = "auto" | "light" | "dark";
+
 export type Settings = {
   clubName: string;
   rate: number;
@@ -59,6 +61,7 @@ export type Settings = {
   tableCount: 6 | 8 | 9;
   vipTables: number[];
   roundUp: 1 | 15;
+  theme: ThemeMode;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -68,6 +71,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tableCount: 9,
   vipTables: [8, 9],
   roundUp: 1,
+  theme: "auto",
 };
 
 export const DEFAULT_MENU: MenuItem[] = [

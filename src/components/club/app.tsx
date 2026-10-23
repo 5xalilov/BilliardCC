@@ -3,6 +3,7 @@ import { Delete, History, SlidersHorizontal } from "lucide-react";
 import { Toaster } from "sonner";
 import { NowProvider, useNow } from "@/components/club/now";
 import { SheetHost } from "@/components/club/sheets";
+import { useResolvedTheme } from "@/components/club/theme";
 import { cn } from "@/lib/cn";
 import {
   displayBucket,
@@ -15,12 +16,13 @@ import {
 import { useClub } from "@/lib/club/store";
 
 export function ClubApp() {
+  const theme = useResolvedTheme();
   return (
     <NowProvider>
       <ClubScreen />
       <SheetHost />
       <Toaster
-        theme="dark"
+        theme={theme}
         position="top-center"
         toastOptions={{
           style: {
@@ -155,7 +157,7 @@ function ClubScreen() {
           {amount}
         </span>
         <span className="mt-3 block min-h-10 text-sm text-muted">{hint}</span>
-        <span className="block min-h-5 text-sm text-op">{extra}</span>
+        <span className="block min-h-5 text-sm text-op-ink">{extra}</span>
       </button>
 
       <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label="Boshqaruv">
@@ -283,7 +285,6 @@ function TableKey({ n, typing, now }: { n: number; typing: boolean; now: number 
 }
 
 function toneClass(tone: "num" | "fn" | "op", active: boolean) {
-  if (active && tone === "op") return "bg-fg text-on-op";
   if (active) return "bg-fg text-bg";
   if (tone === "op") return "bg-op text-on-op";
   if (tone === "fn") return "bg-fn text-fg";
@@ -351,7 +352,7 @@ function Key({
             <span
               className={cn(
                 "mt-1 text-xs font-medium leading-none tabular-nums",
-                active ? "text-bg/70" : live ? "text-live" : paused ? "text-op" : "text-muted",
+                active ? "text-bg/70" : live ? "text-live" : paused ? "text-op-ink" : "text-muted",
               )}
             >
               {sub}

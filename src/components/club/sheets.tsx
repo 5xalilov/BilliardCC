@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Minus, Plus } from "lucide-react";
+import { ChevronLeft, Minus, Moon, Plus, Sun, SunMoon } from "lucide-react";
 import { useNow } from "@/components/club/now";
 import { cn } from "@/lib/cn";
 import {
@@ -14,6 +14,7 @@ import {
   type Bill,
   type MenuCategory,
   type Session,
+  type ThemeMode,
 } from "@/lib/club/logic";
 import { useClub, type Sheet } from "@/lib/club/store";
 
@@ -469,7 +470,7 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
         Kartaga <span className="font-semibold text-fg tabular-nums">{formatSom(Math.max(0, card))}</span>
       </p>
       {!valid && cash > 0 ? (
-        <p className="mt-1 text-center text-sm text-op">Naqd jami ichida bo'lsin</p>
+        <p className="mt-1 text-center text-sm text-op-ink">Naqd jami ichida bo'lsin</p>
       ) : null}
       <button
         type="button"
@@ -522,7 +523,7 @@ function ReceiptSheet({ billId }: { billId: string }) {
         <p className="mt-1 text-center text-lg font-semibold">{bill.label}</p>
         <p className="text-center text-sm text-muted">{formatWhen(bill.closedAt)}</p>
         {bill.voided ? (
-          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-op">BEKOR</p>
+          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-op-ink">BEKOR</p>
         ) : null}
         <div className="mt-4 divide-y divide-line">
           {bill.kind === "table" ? (
@@ -645,8 +646,36 @@ function Stat({ label, value }: { label: string; value: string }) {
 function SettingsSheet() {
   const settings = useClub((s) => s.settings);
   const [name, setName] = useState(settings.clubName);
+  const theme = settings.theme ?? "auto";
   return (
     <div className="pad-safe space-y-4 px-4 pb-5">
+      <div className="rounded-3xl bg-elev px-4 py-4">
+        <p className="text-sm text-muted">Ko'rinish</p>
+        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Ko'rinish">
+          {(
+            [
+              ["auto", "Avto", SunMoon],
+              ["light", "Kun", Sun],
+              ["dark", "Tun", Moon],
+            ] as const satisfies readonly (readonly [ThemeMode, string, typeof Sun])[]
+          ).map(([value, label, Icon]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={theme === value}
+              className={cn(
+                "key flex items-center justify-center gap-1.5 rounded-full py-2 text-sm",
+                theme === value ? "bg-op text-on-op" : "bg-fn text-fg",
+              )}
+              onClick={() => useClub.getState().patchSettings({ theme: value })}
+            >
+              <Icon className="size-4" strokeWidth={1.75} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="overflow-hidden rounded-3xl bg-elev">
         <label className="flex items-center justify-between gap-3 px-4 py-3">
           <span className="text-sm text-muted">Nomi</span>
@@ -756,6 +785,17 @@ function SettingsSheet() {
         Qanday ishlaydi
         <ChevronLeft className="size-4 rotate-180" />
       </button>
+      <StolMark />
+    </div>
+  );
+}
+
+function StolMark() {
+  return (
+    <div className="flex flex-col items-center gap-2 pt-4 pb-1">
+      <span className="text-2xl font-bold tracking-[0.18em] text-fg">STOL</span>
+      <span className="h-1 w-14 rounded-full bg-op" />
+      <span className="text-xs text-muted">Bilyard klub kassasi</span>
     </div>
   );
 }
@@ -852,7 +892,7 @@ function HelpSheet() {
     <div className="pad-safe space-y-3 px-4 pb-5">
       {HELP.map(([title, body]) => (
         <div key={title} className="rounded-3xl bg-elev px-4 py-3">
-          <p className="text-sm font-semibold text-op">{title}</p>
+          <p className="text-sm font-semibold text-op-ink">{title}</p>
           <p className="mt-1 text-sm text-pretty text-fg">{body}</p>
         </div>
       ))}

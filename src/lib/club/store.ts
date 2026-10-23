@@ -638,6 +638,10 @@ export const useClub = create<State>()(
         walkinSeq: state.walkinSeq,
         focusId: state.focusId,
       }),
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<State>;
+        return { ...current, ...saved, settings: { ...current.settings, ...saved.settings } };
+      },
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         if (state.focusId && !state.sessions.some((s) => s.id === state.focusId)) {
