@@ -1,4 +1,4 @@
-# Deploys STOL to Telegram Serverless (tgcloud): the Mini App build (dist-miniapp/)
+# Deploys Orde to Telegram Serverless (tgcloud): the Mini App build (dist-miniapp/)
 # plus the bot code in tgcloud/. See docs/telegram.md.
 #
 # One-time setup: GitHub → Settings → Secrets and variables → Actions →
@@ -94,7 +94,7 @@ jobs:
       - name: Summary
         run: |
           {
-            echo "### STOL Telegram'ga joylandi"
+            echo "### Orde Telegram'ga joylandi"
             echo ""
             echo "- Mini App: $MINI_APP_URL"
             echo "- Commit: \`${GITHUB_SHA::7}\`"
