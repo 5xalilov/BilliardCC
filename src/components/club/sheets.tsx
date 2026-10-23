@@ -1,5 +1,28 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, Crown, Minus, Moon, Plus, ShieldCheck, Sun, SunMoon, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CircleHelp,
+  Clock,
+  Crown,
+  CupSoda,
+  Hash,
+  Languages,
+  LayoutGrid,
+  Minus,
+  Moon,
+  Move,
+  Plus,
+  Settings2,
+  Shapes,
+  ShieldCheck,
+  Store,
+  Sun,
+  SunMoon,
+  Timer,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useNow } from "@/components/club/now";
 import { cn } from "@/lib/cn";
@@ -17,20 +40,20 @@ import {
   type Bill,
   type MenuCategory,
   type Session,
-  type ThemeMode,
   type UnitConfig,
   unitConfig,
   unitKind,
 } from "@/lib/club/logic";
-import { OrdeWordmark } from "@/components/club/logo";
+import { OrdeBall, OrdeWordmark } from "@/components/club/logo";
 import guideKun from "@/assets/onboarding/guide-kun.webp";
 import guideTun from "@/assets/onboarding/guide-tun.webp";
-import { BUSINESSES } from "@/lib/club/business";
+import { BUSINESSES, type BusinessKind } from "@/lib/club/business";
+import { Group, MiniStepper, Row, RowIcon, Segmented, StackRow, Switch } from "@/components/club/settings-ui";
 import { callCloud, cloudAvailable, type CloudClub } from "@/lib/club/cloud";
-import { LANGS, translate } from "@/lib/i18n";
+import { LANGS, translate, type Lang } from "@/lib/i18n";
 import { usePlaceLabel, useT } from "@/lib/i18n/use-t";
 import { GUIDE } from "@/lib/club/guide";
-import { useClub, type Sheet } from "@/lib/club/store";
+import { useClub, type PickField, type SettingsPage, type Sheet } from "@/lib/club/store";
 
 export function SheetHost() {
   const t = useT();
@@ -110,6 +133,7 @@ function sheetTitle(
   sessions: Session[],
   t: ReturnType<typeof useT>,
   label: ReturnType<typeof usePlaceLabel>,
+  business: BusinessKind,
 ) {
   const session = "sessionId" in sheet ? sessions.find((s) => s.id === sheet.sessionId) : undefined;
   const walkins = sessions.filter((s) => s.kind === "walkin").length;
@@ -148,6 +172,13 @@ function sheetTitle(
       return { title: label({ kind: "table", table: sheet.n, seq: 0 }), sub: "" };
     case "product":
       return { title: sheet.itemId ? t("sheet.product") : t("sheet.productNew"), sub: "" };
+    case "settingsPage":
+      return { title: settingsPageTitle(sheet.page, business, t), sub: "" };
+    case "pick":
+      return {
+        title: t(sheet.field === "lang" ? "sheet.language" : sheet.field === "business" ? "sheet.business" : "unitSheet.type"),
+        sub: sheet.field === "unitKind" && sheet.n ? label({ kind: "table", table: sheet.n, seq: 0 }) : "",
+      };
     default:
       return { title: "", sub: "" };
   }
@@ -158,7 +189,8 @@ function SheetHeader({ sheet, stacked }: { sheet: Sheet; stacked: boolean }) {
   const pop = useClub((s) => s.popSheet);
   const t = useT();
   const label = usePlaceLabel();
-  const { title, sub } = sheetTitle(sheet, sessions, t, label);
+  const business = useClub((s) => s.settings.business);
+  const { title, sub } = sheetTitle(sheet, sessions, t, label, business);
   return (
     <div className="shrink-0 px-4 pb-2 pt-3">
       <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line" />
@@ -221,6 +253,10 @@ function SheetBody({ sheet }: { sheet: Sheet }) {
       return <UnitSheet n={sheet.n} />;
     case "product":
       return <ProductSheet itemId={sheet.itemId} />;
+    case "pick":
+      return <PickSheet field={sheet.field} n={sheet.n} />;
+    case "settingsPage":
+      return <SettingsPageSheet page={sheet.page} />;
     default: {
       const neverSheet: never = sheet;
       return neverSheet;
@@ -701,193 +737,287 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Settings home, iOS-style: a club card on top, then category rows; each category opens its
+// own page (SettingsPageSheet) with the controls that belong to it.
 function SettingsSheet() {
   const t = useT();
   const settings = useClub((s) => s.settings);
   const isAdmin = useClub((s) => s.cloud.isAdmin);
-  const [name, setName] = useState(settings.clubName);
+  const menuCount = useClub((s) => s.menu.length);
   const theme = settings.theme ?? "auto";
-  const label = usePlaceLabel();
+  const push = useClub.getState().pushSheet;
+  const page = (p: SettingsPage) => () => push({ kind: "settingsPage", page: p });
   return (
-    <div className="pad-safe space-y-4 px-4 pb-5">
-      {isAdmin ? (
-        <button
-          type="button"
-          className="key flex h-12 w-full items-center justify-between rounded-full bg-op px-5 text-base font-semibold text-on-op"
-          onClick={() => useClub.getState().pushSheet({ kind: "admin" })}
-        >
-          <span className="flex items-center gap-2">
-            <ShieldCheck className="size-4" />
-            {t("sheet.admin")}
+    <div className="pad-safe space-y-6 px-4 pt-1 pb-5">
+      <button
+        type="button"
+        onClick={page("general")}
+        className="flex w-full items-center gap-3 rounded-2xl bg-elev px-4 py-3 text-left transition-colors active:bg-fn/40"
+      >
+        <OrdeBall className="size-12 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-lg font-semibold">{settings.clubName}</span>
+          <span className="block truncate text-sm text-muted">
+            {t(`biz.${settings.business}`)} · {settings.tableCount} · {formatSom(settings.rate)}
           </span>
-          <ChevronLeft className="size-4 rotate-180" />
-        </button>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted" />
+      </button>
+
+      {isAdmin ? (
+        <Group>
+          <Row icon={ShieldCheck} label={t("sheet.admin")} chevron onClick={() => push({ kind: "admin" })} />
+        </Group>
       ) : null}
-      <div className="rounded-3xl bg-elev px-4 py-4">
-        <p className="text-sm text-muted">{t("settings.appearance")}</p>
-        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("settings.appearance")}>
-          {(
-            [
-              ["auto", t("theme.auto"), SunMoon],
-              ["light", t("theme.light"), Sun],
-              ["dark", t("theme.dark"), Moon],
-            ] as const satisfies readonly (readonly [ThemeMode, string, typeof Sun])[]
-          ).map(([value, label, Icon]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={theme === value}
-              className={cn(
-                "key flex items-center justify-center gap-1.5 rounded-full py-2 text-sm",
-                theme === value ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
-              )}
-              onClick={() => useClub.getState().patchSettings({ theme: value })}
-            >
-              <Icon className="size-4" strokeWidth={1.75} />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <ChoiceRow
-        label={t("sheet.language")}
-        value={settings.lang}
-        options={LANGS.map((l) => ({ id: l.id, label: l.label }))}
-        onPick={(lang) => useClub.getState().patchSettings({ lang })}
-      />
-      <ChoiceRow
-        label={t("sheet.business")}
-        value={settings.business}
-        options={BUSINESSES.map((b) => ({ id: b.id, label: `${b.emoji} ${t(`biz.${b.id}`)}` }))}
-        onPick={(business) => useClub.getState().patchSettings({ business })}
-      />
-      <div className="overflow-hidden rounded-3xl bg-elev">
-        <label className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm text-muted">{t("settings.name")}</span>
-          <input
-            value={name}
-            maxLength={32}
-            aria-label={t("settings.clubName")}
-            onChange={(event) => setName(event.target.value)}
-            onBlur={() => useClub.getState().setClubName(name)}
-            className="w-40 bg-transparent text-right text-base text-fg outline-none"
-          />
-        </label>
-      </div>
-      <div className="space-y-4 rounded-3xl bg-elev px-4 py-4">
-        <Stepper
-          label={t("settings.rate")}
-          value={settings.rate}
-          min={5000}
-          max={500000}
-          step={5000}
-          onChange={(rate) => useClub.getState().patchSettings({ rate })}
-        />
-        <Stepper
-          label={t("settings.vipRate")}
-          value={settings.vipRate}
-          min={5000}
-          max={800000}
-          step={5000}
-          onChange={(vipRate) => useClub.getState().patchSettings({ vipRate })}
-        />
-        <p className="text-sm text-muted">{t("settings.ratesNote")}</p>
-      </div>
-      <div className="rounded-3xl bg-elev px-4 py-4">
-        <p className="text-sm text-muted">{t("settings.rounding")}</p>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {(
-            [
-              [1, t("settings.round1")],
-              [15, t("settings.round15")],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={cn(
-                "key rounded-full py-2 text-sm",
-                settings.roundUp === value ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
-              )}
-              onClick={() => useClub.getState().patchSettings({ roundUp: value })}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-3xl bg-elev px-4 py-4">
-        <Stepper
+
+      <Group>
+        <Row icon={Settings2} label={t("settings.general")} chevron onClick={page("general")} />
+        <Row
+          icon={LayoutGrid}
           label={t(`units.${settings.business}`)}
           value={settings.tableCount}
-          min={1}
-          max={MAX_TABLES}
-          step={1}
-          onChange={(count) => useClub.getState().setTableCount(count)}
+          chevron
+          onClick={page("units")}
         />
-        {!settings.premium ? (
-          <p className="mt-2 text-sm text-muted">{t("settings.freeLimit", { n: FREE_TABLE_LIMIT })}</p>
-        ) : null}
-        <p className="mt-4 text-sm text-muted">{t("settings.each")}</p>
-        <div className="mt-3 grid grid-cols-5 gap-2">
+        <Row icon={Clock} label={t("settings.prices")} value={formatSom(settings.rate)} chevron onClick={page("prices")} />
+      </Group>
+
+      <Group>
+        <Row icon={CupSoda} label={t("settings.menu")} value={menuCount} chevron onClick={() => push({ kind: "menu" })} />
+        <Row icon={SunMoon} label={t("settings.appearance")} value={t(`theme.${theme}`)} chevron onClick={page("appearance")} />
+        <Row icon={Move} label={t("keyMenu.arrange")} chevron onClick={() => useClub.getState().startArranging()} />
+      </Group>
+
+      <Group>
+        <Row
+          icon={Crown}
+          label={t("sheet.premium")}
+          accessory={settings.premium ? <Check className="size-5 text-op-ink" aria-label={t("premium.already")} /> : null}
+          chevron
+          onClick={() => push({ kind: "premium" })}
+        />
+        <Row icon={CircleHelp} label={t("settings.help")} chevron onClick={() => push({ kind: "help" })} />
+      </Group>
+      <BrandFooter />
+    </div>
+  );
+}
+
+const SETTINGS_PAGE_TITLE = {
+  general: "settings.general",
+  prices: "settings.prices",
+  appearance: "settings.appearance",
+} as const;
+
+function settingsPageTitle(page: SettingsPage, business: BusinessKind, t: ReturnType<typeof useT>) {
+  return page === "units" ? t(`units.${business}`) : t(SETTINGS_PAGE_TITLE[page]);
+}
+
+function SettingsPageSheet({ page }: { page: SettingsPage }) {
+  const t = useT();
+  const settings = useClub((s) => s.settings);
+  const [name, setName] = useState(settings.clubName);
+  const label = usePlaceLabel();
+  const steps = (text: string) => ({
+    decLabel: translate(settings.lang, "common.dec", { label: text }),
+    incLabel: translate(settings.lang, "common.inc", { label: text }),
+  });
+  const push = useClub.getState().pushSheet;
+  const patch = useClub.getState().patchSettings;
+  const wrap = (children: ReactNode) => <div className="pad-safe space-y-6 px-4 pt-1 pb-5">{children}</div>;
+
+  if (page === "general") {
+    return wrap(
+      <Group>
+        <label className="ios-row flex items-center gap-3 pl-4">
+          <RowIcon icon={Store} />
+          <span className="ios-row-body flex min-h-12 min-w-0 flex-1 items-center gap-3 py-2.5 pr-4">
+            <span className="shrink-0 text-base">{t("settings.name")}</span>
+            <input
+              value={name}
+              maxLength={32}
+              aria-label={t("settings.clubName")}
+              onChange={(event) => setName(event.target.value)}
+              onBlur={() => useClub.getState().setClubName(name)}
+              className="min-w-0 flex-1 bg-transparent text-right text-base text-muted outline-none focus:text-fg"
+            />
+          </span>
+        </label>
+        <Row
+          icon={Shapes}
+          label={t("sheet.business")}
+          value={t(`biz.${settings.business}`)}
+          chevron
+          onClick={() => push({ kind: "pick", field: "business" })}
+        />
+        <Row
+          icon={Languages}
+          label={t("sheet.language")}
+          value={LANGS.find((l) => l.id === settings.lang)?.label}
+          chevron
+          onClick={() => push({ kind: "pick", field: "lang" })}
+        />
+      </Group>,
+    );
+  }
+
+  if (page === "units") {
+    const units = t(`units.${settings.business}`);
+    return wrap(
+      <>
+        <Group footer={settings.premium ? undefined : t("settings.freeLimit", { n: FREE_TABLE_LIMIT })}>
+          <Row
+            icon={Hash}
+            label={t("settings.count")}
+            accessory={
+              <MiniStepper
+                value={settings.tableCount}
+                min={1}
+                max={MAX_TABLES}
+                step={1}
+                onChange={(count) => useClub.getState().setTableCount(count)}
+                {...steps(units)}
+              />
+            }
+          />
+        </Group>
+        <Group>
           {Array.from({ length: settings.tableCount }, (_, i) => i + 1).map((n) => {
-            const custom = Object.keys(unitConfig(settings, n)).length > 0;
+            const unit = unitConfig(settings, n);
             const vip = settings.vipTables.includes(n);
+            const rate = vip ? (unit.vipRate ?? settings.vipRate) : (unit.rate ?? settings.rate);
+            const place = label({ kind: "table", table: n, seq: 0 });
             return (
-              <button
+              <Row
                 key={n}
-                type="button"
-                aria-label={label({ kind: "table", table: n, seq: 0 })}
-                className={cn(
-                  "key relative aspect-square rounded-full text-sm font-semibold",
-                  vip ? "bg-op-tint text-op-ink" : "bg-fn text-fg",
-                )}
-                onClick={() => useClub.getState().pushSheet({ kind: "unit", n })}
-              >
-                {n}
-                {custom ? <span className="absolute right-0.5 top-0.5 size-2.5 rounded-full bg-fg ring-2 ring-elev" /> : null}
-              </button>
+                label={place}
+                value={
+                  <>
+                    {vip ? (
+                      <span className="rounded-full bg-op-tint px-2 py-0.5 text-xs font-semibold text-op-ink">VIP</span>
+                    ) : null}
+                    <span className={Object.keys(unit).length ? "text-op-ink" : undefined}>{formatSom(rate)}</span>
+                  </>
+                }
+                chevron
+                ariaLabel={place}
+                onClick={() => push({ kind: "unit", n })}
+              />
             );
           })}
-        </div>
-      </div>
-      <button
-        type="button"
-        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
-        onClick={() => useClub.getState().pushSheet({ kind: "premium" })}
-      >
-        <span className="flex items-center gap-2">
-          <Crown className="size-4 text-op-ink" />
-          {settings.premium ? t("settings.premiumActive") : t("sheet.premium")}
-        </span>
-        <ChevronLeft className="size-4 rotate-180" />
-      </button>
-      <button
-        type="button"
-        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
-        onClick={() => useClub.getState().pushSheet({ kind: "menu" })}
-      >
-        {t("settings.menu")}
-        <ChevronLeft className="size-4 rotate-180" />
-      </button>
-      <button
-        type="button"
-        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
-        onClick={() => useClub.getState().startArranging()}
-      >
-        {t("keyMenu.arrange")}
-        <ChevronLeft className="size-4 rotate-180" />
-      </button>
-      <button
-        type="button"
-        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
-        onClick={() => useClub.getState().pushSheet({ kind: "help" })}
-      >
-        {t("settings.help")}
-        <ChevronLeft className="size-4 rotate-180" />
-      </button>
-      <BrandFooter />
+        </Group>
+      </>,
+    );
+  }
+
+  if (page === "prices") {
+    return wrap(
+      <Group footer={t("settings.ratesNote")}>
+        <Row
+          icon={Clock}
+          label={t("settings.rate")}
+          accessory={
+            <MiniStepper
+              value={settings.rate}
+              min={5000}
+              max={500000}
+              step={5000}
+              format={formatSom}
+              onChange={(rate) => patch({ rate })}
+              {...steps(t("settings.rate"))}
+            />
+          }
+        />
+        <Row
+          icon={Crown}
+          label={t("settings.vipRate")}
+          accessory={
+            <MiniStepper
+              value={settings.vipRate}
+              min={5000}
+              max={800000}
+              step={5000}
+              format={formatSom}
+              onChange={(vipRate) => patch({ vipRate })}
+              {...steps(t("settings.vipRate"))}
+            />
+          }
+        />
+        <StackRow icon={Timer} label={t("settings.rounding")}>
+          <Segmented
+            label={t("settings.rounding")}
+            value={settings.roundUp}
+            onChange={(roundUp) => patch({ roundUp })}
+            options={[
+              { id: 1, label: t("settings.round1") },
+              { id: 15, label: t("settings.round15") },
+            ]}
+          />
+        </StackRow>
+      </Group>,
+    );
+  }
+
+  const theme = settings.theme ?? "auto";
+  return wrap(
+    <Group>
+      {(
+        [
+          ["auto", SunMoon],
+          ["light", Sun],
+          ["dark", Moon],
+        ] as const
+      ).map(([value, Icon]) => (
+        <Row
+          key={value}
+          icon={Icon}
+          label={t(`theme.${value}`)}
+          accessory={theme === value ? <Check className="size-5 text-op-ink" /> : null}
+          onClick={() => patch({ theme: value })}
+        />
+      ))}
+    </Group>,
+  );
+}
+
+// Single choice from a list (language, business kind, a unit's kind): a check marks the
+// current value; picking applies it and returns to the previous sheet.
+function PickSheet({ field, n }: { field: PickField; n?: number }) {
+  const t = useT();
+  const settings = useClub((s) => s.settings);
+  const kinds = BUSINESSES.map((b) => ({ id: b.id as string, label: `${b.emoji} ${t(`biz.${b.id}`)}` }));
+  let options: { id: string; label: string }[];
+  let value: string;
+  let apply: (id: string) => void;
+  if (field === "lang") {
+    options = LANGS.map((l) => ({ id: l.id as string, label: l.label }));
+    value = settings.lang;
+    apply = (id) => useClub.getState().patchSettings({ lang: id as Lang });
+  } else if (field === "business") {
+    options = kinds;
+    value = settings.business;
+    apply = (id) => useClub.getState().patchSettings({ business: id as BusinessKind });
+  } else {
+    const unit = n ?? 1;
+    options = [{ id: "", label: t("unitSheet.clubType") }, ...kinds];
+    value = unitConfig(settings, unit).kind ?? "";
+    apply = (id) => useClub.getState().setUnit(unit, { kind: (id || undefined) as BusinessKind | undefined });
+  }
+  return (
+    <div className="pad-safe px-4 pt-1 pb-5">
+      <Group>
+        {options.map((option) => (
+          <Row
+            key={option.id || "default"}
+            label={option.label}
+            accessory={value === option.id ? <Check className="size-5 text-op-ink" /> : null}
+            onClick={() => {
+              apply(option.id);
+              useClub.getState().popSheet();
+            }}
+          />
+        ))}
+      </Group>
     </div>
   );
 }
@@ -898,42 +1028,6 @@ function BrandFooter() {
     <div className="flex flex-col items-center gap-2 pt-4 pb-1">
       <OrdeWordmark className="h-7 text-fg" />
       <span className="text-xs text-muted">{t("brand.tagline")}</span>
-    </div>
-  );
-}
-
-// A labelled, horizontally scrolling row of single-choice chips (language, business kind).
-function ChoiceRow<T extends string>({
-  label,
-  value,
-  options,
-  onPick,
-}: {
-  label: string;
-  value: T;
-  options: { id: T; label: string }[];
-  onPick: (id: T) => void;
-}) {
-  return (
-    <div>
-      <p className="px-1 pb-2 text-sm text-muted">{label}</p>
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="radiogroup" aria-label={label}>
-        {options.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            role="radio"
-            aria-checked={value === option.id}
-            onClick={() => onPick(option.id)}
-            className={cn(
-              "key shrink-0 rounded-full px-4 py-2 text-sm",
-              value === option.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
@@ -984,7 +1078,7 @@ function MenuSheet() {
   const t = useT();
   const menu = useClub((s) => s.menu);
   return (
-    <div className="pad-safe space-y-3 px-4 pb-5">
+    <div className="pad-safe space-y-4 px-4 pt-1 pb-5">
       <button
         type="button"
         className="key flex h-12 w-full items-center justify-center gap-2 rounded-full bg-op text-base font-semibold text-on-op"
@@ -996,25 +1090,18 @@ function MenuSheet() {
       {menu.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">{t("menu.empty")}</p>
       ) : (
-        <ul className="overflow-hidden rounded-3xl bg-elev">
+        <Group>
           {menu.map((item) => (
-            <li key={item.id} className="border-b border-line last:border-b-0">
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: item.id })}
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-base">{item.name}</span>
-                  <span className="text-sm text-muted">
-                    {t(`cat.${item.category}`)}
-                  </span>
-                </span>
-                <span className="shrink-0 text-base tabular-nums">{formatSom(item.price)}</span>
-              </button>
-            </li>
+            <Row
+              key={item.id}
+              label={item.name}
+              sub={t(`cat.${item.category}`)}
+              value={formatSom(item.price)}
+              chevron
+              onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: item.id })}
+            />
           ))}
-        </ul>
+        </Group>
       )}
     </div>
   );
@@ -1037,9 +1124,9 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
 
   return (
     <div className="pad-safe space-y-4 px-4 pb-5">
-      <div className="overflow-hidden rounded-3xl bg-elev">
+      <div className="overflow-hidden rounded-2xl bg-elev">
         <label className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-          <span className="text-sm text-muted">{t("product.name")}</span>
+          <span className="shrink-0 text-base">{t("product.name")}</span>
           <input
             value={name}
             maxLength={40}
@@ -1051,7 +1138,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
           />
         </label>
         <label className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm text-muted">{t("product.price")}</span>
+          <span className="shrink-0 text-base">{t("product.price")}</span>
           <input
             value={price ? formatSom(amount) : ""}
             inputMode="numeric"
@@ -1157,7 +1244,8 @@ function PremiumSheet() {
   );
 }
 
-// One unit's own settings: name, business type, rates, VIP. Unset fields follow the club.
+// One unit's own settings: name, business type, rates, VIP. Unset fields follow the club;
+// a value set for this unit alone is shown in the accent ink.
 function UnitSheet({ n }: { n: number }) {
   const t = useT();
   const settings = useClub((s) => s.settings);
@@ -1167,91 +1255,76 @@ function UnitSheet({ n }: { n: number }) {
   const set = (patch: UnitConfig) => useClub.getState().setUnit(n, patch);
   const custom = Object.keys(unit).length > 0;
   const placeholder = `${t(`unit.${kind}`)} ${n}`;
+  const steps = (text: string) => ({
+    decLabel: translate(settings.lang, "common.dec", { label: text }),
+    incLabel: translate(settings.lang, "common.inc", { label: text }),
+  });
 
   return (
-    <div className="pad-safe space-y-4 px-4 pb-5">
-      <div className="overflow-hidden rounded-3xl bg-elev">
-        <label className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm text-muted">{t("unitSheet.name")}</span>
-          <input
-            value={unit.name ?? ""}
-            maxLength={24}
-            placeholder={placeholder}
-            aria-label={t("unitSheet.name")}
-            onChange={(event) => set({ name: event.target.value })}
-            className="min-w-0 flex-1 bg-transparent text-right text-base text-fg outline-none placeholder:text-muted/60"
-          />
+    <div className="pad-safe space-y-6 px-4 pt-1 pb-5">
+      <Group>
+        <label className="ios-row flex items-center gap-3 pl-4">
+          <span className="ios-row-body flex min-h-12 min-w-0 flex-1 items-center gap-3 py-2.5 pr-4">
+            <span className="shrink-0 text-base">{t("unitSheet.name")}</span>
+            <input
+              value={unit.name ?? ""}
+              maxLength={24}
+              placeholder={placeholder}
+              aria-label={t("unitSheet.name")}
+              onChange={(event) => set({ name: event.target.value })}
+              className="min-w-0 flex-1 bg-transparent text-right text-base text-fg outline-none placeholder:text-muted"
+            />
+          </span>
         </label>
-      </div>
-
-      <div>
-        <p className="px-1 pb-2 text-sm text-muted">{t("unitSheet.type")}</p>
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-          <button
-            type="button"
-            aria-pressed={!unit.kind}
-            onClick={() => set({ kind: undefined })}
-            className={cn("key shrink-0 rounded-full px-4 py-2 text-sm", !unit.kind ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg")}
-          >
-            {t("unitSheet.clubType")}
-          </button>
-          {BUSINESSES.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              aria-pressed={unit.kind === b.id}
-              onClick={() => set({ kind: b.id })}
-              className={cn(
-                "key shrink-0 rounded-full px-4 py-2 text-sm",
-                unit.kind === b.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
-              )}
-            >
-              {b.emoji} {t(`biz.${b.id}`)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4 rounded-3xl bg-elev px-4 py-4">
-        <Stepper
-          label={t("unitSheet.rate") + (unit.rate !== undefined ? ` · ${t("unitSheet.custom")}` : "")}
-          value={unit.rate ?? settings.rate}
-          min={0}
-          max={2000000}
-          step={5000}
-          onChange={(rate) => set({ rate })}
+        <Row
+          label={t("unitSheet.type")}
+          value={<span className={unit.kind ? "text-op-ink" : undefined}>{unit.kind ? t(`biz.${unit.kind}`) : t("unitSheet.clubType")}</span>}
+          chevron
+          onClick={() => useClub.getState().pushSheet({ kind: "pick", field: "unitKind", n })}
         />
-        <Stepper
-          label={t("unitSheet.vipRate") + (unit.vipRate !== undefined ? ` · ${t("unitSheet.custom")}` : "")}
-          value={unit.vipRate ?? settings.vipRate}
-          min={0}
-          max={2000000}
-          step={5000}
-          onChange={(vipRate) => set({ vipRate })}
-        />
-      </div>
+      </Group>
 
-      <button
-        type="button"
-        role="switch"
-        aria-checked={vip}
-        onClick={() => useClub.getState().toggleVipTable(n)}
-        className="key flex w-full items-center justify-between rounded-3xl bg-elev px-4 py-4 text-left"
-      >
-        <span className="text-base">{t("unitSheet.vip")}</span>
-        <span className={cn("flex h-7 w-12 items-center rounded-full p-0.5", vip ? "bg-op" : "bg-fn")}>
-          <span className={cn("size-6 rounded-full shadow transition-transform", vip ? "translate-x-5 bg-on-op" : "bg-fg")} />
-        </span>
-      </button>
+      <Group header={t("settings.prices")}>
+        <Row
+          label={t("unitSheet.rate")}
+          accessory={
+            <MiniStepper
+              value={unit.rate ?? settings.rate}
+              min={0}
+              max={2000000}
+              step={5000}
+              format={formatSom}
+              highlight={unit.rate !== undefined}
+              onChange={(rate) => set({ rate })}
+              {...steps(t("unitSheet.rate"))}
+            />
+          }
+        />
+        <Row
+          label={t("unitSheet.vipRate")}
+          accessory={
+            <MiniStepper
+              value={unit.vipRate ?? settings.vipRate}
+              min={0}
+              max={2000000}
+              step={5000}
+              format={formatSom}
+              highlight={unit.vipRate !== undefined}
+              onChange={(vipRate) => set({ vipRate })}
+              {...steps(t("unitSheet.vipRate"))}
+            />
+          }
+        />
+        <Row
+          label={t("unitSheet.vip")}
+          accessory={<Switch on={vip} label={t("unitSheet.vip")} onChange={() => useClub.getState().toggleVipTable(n)} />}
+        />
+      </Group>
 
       {custom ? (
-        <button
-          type="button"
-          className="key h-12 w-full rounded-full bg-elev text-base text-fg"
-          onClick={() => useClub.getState().setUnit(n, null)}
-        >
-          {t("unitSheet.reset")}
-        </button>
+        <Group>
+          <Row label={t("unitSheet.reset")} tone="accent" onClick={() => useClub.getState().setUnit(n, null)} />
+        </Group>
       ) : null}
     </div>
   );
@@ -1374,12 +1447,16 @@ function HelpSheet() {
       >
         {t("help.replay")}
       </button>
-      {GUIDE.map(({ target }) => (
-        <div key={target} className="rounded-3xl bg-elev px-4 py-3">
-          <p className="text-sm font-semibold text-op-ink">{t(`guide.${target}.title`, guideVars)}</p>
-          <p className="mt-1 text-sm text-pretty text-fg">{t(`guide.${target}.text`, guideVars)}</p>
-        </div>
-      ))}
+      <Group>
+        {GUIDE.map(({ target }) => (
+          <div key={target} className="ios-row pl-4">
+            <div className="ios-row-body py-3 pr-4">
+              <p className="text-base font-semibold text-op-ink">{t(`guide.${target}.title`, guideVars)}</p>
+              <p className="mt-0.5 text-sm text-pretty text-muted">{t(`guide.${target}.text`, guideVars)}</p>
+            </div>
+          </div>
+        ))}
+      </Group>
     </div>
   );
 }

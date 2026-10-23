@@ -25,6 +25,7 @@
   --color-on-danger: #ffffff;
   --color-seg: #5a546a;
   --color-scrim: rgb(0 0 0 / 0.6);
+  --color-knob: #ffffff;
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
 }
 
@@ -160,6 +161,11 @@
 /* Tanlangan stol, chip yoki variant: och yashil fon + yashil halqa (Noton'dagi tanlangan stol kartasi kabi). */
 .key-sel {
   --key-ring: inset 0 0 0 2px var(--color-live);
+}
+
+/* Sozlamalar (iOS uslubi): guruh ichidagi qatorlar orasida ikonkadan keyin boshlanadigan ingichka chiziq. */
+.ios-row + .ios-row .ios-row-body {
+  border-top: 1px solid var(--color-line);
 }
 
 /* Klaviatura bilan yurganda fokus aniq ko'rinsin. */
