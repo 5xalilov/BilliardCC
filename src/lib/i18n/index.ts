@@ -3,6 +3,7 @@
 // React components use useT() (./use-t.ts); non-React code calls translate() directly.
 import { uz, type Dict, type TKey } from "@/lib/i18n/uz";
 import { uzCyrl } from "@/lib/i18n/uz-Cyrl";
+import { xorazm } from "@/lib/i18n/xorazm";
 import { kaa } from "@/lib/i18n/kaa";
 import { ru } from "@/lib/i18n/ru";
 import { en } from "@/lib/i18n/en";
@@ -17,6 +18,7 @@ export type { TKey } from "@/lib/i18n/uz";
 export const LANGS = [
   { id: "uz", label: "O'zbekcha" },
   { id: "uz-Cyrl", label: "Ўзбекча" },
+  { id: "xorazm", label: "Xorazmcha" },
   { id: "kaa", label: "Qaraqalpaqsha" },
   { id: "ru", label: "Русский" },
   { id: "en", label: "English" },
@@ -32,6 +34,7 @@ export type Lang = (typeof LANGS)[number]["id"];
 const DICTS: Partial<Record<Lang, Partial<Dict>>> = {
   uz,
   "uz-Cyrl": uzCyrl,
+  xorazm,
   kaa,
   ru,
   en,
