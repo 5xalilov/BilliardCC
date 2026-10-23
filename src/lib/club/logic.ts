@@ -1,3 +1,6 @@
+import type { BusinessKind } from "@/lib/club/business";
+import type { Lang } from "@/lib/i18n";
+
 export type MenuCategory = "ichimlik" | "issiq" | "pivo" | "gazak";
 
 export type MenuItem = {
@@ -52,25 +55,77 @@ export type Bill = {
   voided: boolean;
 };
 
+export type ThemeMode = "auto" | "light" | "dark";
+
+export const FREE_TABLE_LIMIT = 3;
+export const MAX_TABLES = 30;
+// The free keypad always shows a full 3×3 block: the first FREE_TABLE_LIMIT keys work,
+// the rest are locked and open the Premium sheet.
+export const FREE_GRID = 9;
+
+// Optional per-unit overrides (key = unit number). Anything unset uses the club defaults.
+export type UnitConfig = { name?: string; rate?: number; vipRate?: number; kind?: BusinessKind };
+
 export type Settings = {
   clubName: string;
   rate: number;
   vipRate: number;
-  tableCount: 6 | 8 | 9;
+  tableCount: number;
   vipTables: number[];
   roundUp: 1 | 15;
+  theme: ThemeMode;
+  premium: boolean;
+  setupDone: boolean;
+  tourDone: boolean;
+  lang: Lang;
+  business: BusinessKind;
+  units: Record<string, UnitConfig>;
+  // Non-unit keypad keys in slot order (ids from DEFAULT_SETTINGS.keyLayout); set in arrange mode.
+  keyLayout: string[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   clubName: "Bilyard klub",
   rate: 60000,
   vipRate: 120000,
-  tableCount: 9,
-  vipTables: [8, 9],
+  tableCount: FREE_TABLE_LIMIT,
+  vipTables: [],
   roundUp: 1,
+  theme: "auto",
+  premium: false,
+  setupDone: false,
+  tourDone: false,
+  lang: "uz",
+  business: "billiard",
+  units: {},
+  keyLayout: ["undo", "ac", "discount", "bar", "pause", "remove", "add", "transfer", "walkin", "vip", "hisob"],
 };
 
-export const DEFAULT_MENU: MenuItem[] = [
+export function tableLimit(settings: Pick<Settings, "premium">) {
+  return settings.premium ? MAX_TABLES : FREE_TABLE_LIMIT;
+}
+
+export function unitConfig(settings: Pick<Settings, "units">, n: number): UnitConfig {
+  return settings.units[String(n)] ?? {};
+}
+
+export function unitKind(settings: Pick<Settings, "units" | "business">, n: number): BusinessKind {
+  return unitConfig(settings, n).kind ?? settings.business;
+}
+
+// Hourly rate a new session on unit n starts with.
+export function unitRate(settings: Pick<Settings, "units" | "rate" | "vipRate">, n: number, vip: boolean) {
+  const unit = unitConfig(settings, n);
+  return vip ? (unit.vipRate ?? settings.vipRate) : (unit.rate ?? settings.rate);
+}
+
+// Tables that can be opened right now (a club that lost Premium keeps its count but not its keys).
+export function activeTables(settings: Pick<Settings, "premium" | "tableCount">) {
+  return Math.min(settings.tableCount, tableLimit(settings));
+}
+
+// Offered once during club setup ("Namuna menyu"); a new club starts with an empty menu.
+export const SAMPLE_MENU: MenuItem[] = [
   { id: "suv", name: "Suv", price: 5000, category: "ichimlik" },
   { id: "cola", name: "Cola", price: 12000, category: "ichimlik" },
   { id: "fanta", name: "Fanta", price: 12000, category: "ichimlik" },
@@ -85,6 +140,13 @@ export const DEFAULT_MENU: MenuItem[] = [
   { id: "pista", name: "Pista", price: 30000, category: "gazak" },
   { id: "shokolad", name: "Shokolad", price: 10000, category: "gazak" },
   { id: "yongoq", name: "Yong'oq", price: 20000, category: "gazak" },
+];
+
+export const MENU_CATEGORIES: { id: MenuCategory; label: string }[] = [
+  { id: "ichimlik", label: "Ichimlik" },
+  { id: "issiq", label: "Issiq" },
+  { id: "pivo", label: "Pivo" },
+  { id: "gazak", label: "Gazak" },
 ];
 
 export const CATEGORIES: { id: MenuCategory | "all"; label: string }[] = [
@@ -148,15 +210,6 @@ export function billedMinutes(elapsed: number, roundUp: number) {
   const minutes = elapsed / 60000;
   if (roundUp <= 1) return Math.ceil(minutes);
   return Math.ceil(minutes / roundUp) * roundUp;
-}
-
-export function sessionLabel(
-  s: Pick<Session, "kind" | "table" | "seq">,
-  walkinCount = 1,
-) {
-  if (s.kind === "table") return `Stol ${s.table}`;
-  if (walkinCount > 1) return `Tashqi ${s.seq}`;
-  return "Tashqi";
 }
 
 export type Quote = {

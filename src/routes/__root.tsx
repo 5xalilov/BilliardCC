@@ -1,9 +1,10 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { THEME_BOOT_SCRIPT, THEME_COLORS } from "@/components/club/theme";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Stol";
+const APP_NAME = "Orde";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -12,8 +13,9 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: APP_NAME },
       { name: "description", content: "Bilyard klub uchun stol, vaqt va bar hisobi." },
-      { name: "theme-color", content: "#000000" },
+      { name: "theme-color", content: THEME_COLORS.dark },
     ],
+    scripts: [{ children: THEME_BOOT_SCRIPT }],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

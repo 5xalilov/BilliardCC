@@ -2,18 +2,26 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  DEFAULT_MENU,
   DEFAULT_SETTINGS,
+  MAX_TABLES,
+  FREE_TABLE_LIMIT,
+  SAMPLE_MENU,
+  activeTables,
   formatSom,
+  unitRate,
   quote,
-  sessionLabel,
+  tableLimit,
   uid,
   type Bill,
   type LineItem,
   type MenuItem,
   type Session,
   type Settings,
+  type UnitConfig,
 } from "@/lib/club/logic";
+import type { SyncResult } from "@/lib/club/cloud";
+import { placeLabel } from "@/lib/club/labels";
+import { translate, type TKey, type TVars } from "@/lib/i18n";
 
 export type Sheet =
   | { id: string; kind: "bar" }
@@ -28,7 +36,11 @@ export type Sheet =
   | { id: string; kind: "menu" }
   | { id: string; kind: "help" }
   | { id: string; kind: "transfer"; sessionId: string }
-  | { id: string; kind: "walkins" };
+  | { id: string; kind: "walkins" }
+  | { id: string; kind: "premium" }
+  | { id: string; kind: "admin" }
+  | { id: string; kind: "unit"; n: number }
+  | { id: string; kind: "product"; itemId: string | null };
 
 export type SheetInput =
   | { kind: "bar" }
@@ -43,12 +55,22 @@ export type SheetInput =
   | { kind: "menu" }
   | { kind: "help" }
   | { kind: "transfer"; sessionId: string }
-  | { kind: "walkins" };
+  | { kind: "walkins" }
+  | { kind: "premium" }
+  | { kind: "admin" }
+  | { kind: "unit"; n: number }
+  | { kind: "product"; itemId: string | null };
+
+export type SetupInput = Pick<Settings, "clubName" | "tableCount" | "rate" | "vipRate"> & {
+  sampleMenu: boolean;
+};
 
 type Undo = { type: "delete"; id: string } | { type: "restore"; session: Session };
 
 type State = {
   settings: Settings;
+  // Server view (not persisted): refreshed from syncClub each time the Mini App opens.
+  cloud: { isAdmin: boolean; premiumRequested: boolean };
   menu: MenuItem[];
   sessions: Session[];
   bills: Bill[];
@@ -57,6 +79,8 @@ type State = {
   sheets: Sheet[];
   entry: { buffer: string } | null;
   undo: Undo[];
+  // Keypad arrange mode (not persisted): keys wiggle and can be dragged onto each other.
+  arranging: boolean;
   pressTable: (n: number) => void;
   pressWalkin: () => void;
   pressAC: () => void;
@@ -83,14 +107,34 @@ type State = {
   closeBill: (sessionId: string, cash: number, card: number) => void;
   voidBill: (sessionId: string) => void;
   patchSettings: (partial: Partial<Settings>) => void;
-  setTableCount: (count: 6 | 8 | 9) => void;
+  setTableCount: (count: number) => void;
+  completeSetup: (input: SetupInput) => void;
+  saveMenuItem: (item: Omit<MenuItem, "id"> & { id?: string }) => void;
+  removeMenuItem: (id: string) => void;
+  applyCloud: (result: SyncResult) => void;
+  // Merge per-unit overrides; null (or an empty result) resets the unit to club defaults.
+  setUnit: (n: number, patch: UnitConfig | null) => void;
+  markPremiumRequested: () => void;
   toggleVipTable: (table: number) => void;
-  setMenuPrice: (id: string, price: number) => void;
   setClubName: (name: string) => void;
+  setKeyLayout: (order: string[]) => void;
+  resetKeyLayout: () => void;
+  startArranging: () => void;
+  stopArranging: () => void;
 };
 
+// Toasts and bill labels follow the club's language; the store isn't a component, so it
+// reads the language straight from state.
+function say(key: TKey, vars?: TVars) {
+  toast(translate(useClub.getState().settings.lang, key, vars));
+}
+
 function needFocus() {
-  toast("Avval stolni yoki tashqini tanlang");
+  say("toast.pickFirst");
+}
+
+function labelOf(settings: Settings, place: Pick<Session, "kind" | "table" | "seq">, walkins?: number) {
+  return placeLabel(settings, settings.lang, place, walkins);
 }
 
 function walkinCount(sessions: Session[]) {
@@ -129,7 +173,7 @@ export const useClub = create<State>()(
           startedAt: Date.now(),
           pausedMs: 0,
           pauseStartedAt: null,
-          ratePerHour: vip ? settings.vipRate : settings.rate,
+          ratePerHour: unitRate(settings, n, vip),
           vip,
           items: [],
           discountPct: 0,
@@ -178,7 +222,7 @@ export const useClub = create<State>()(
           kind: session.kind,
           table: session.table,
           seq: session.seq,
-          label: sessionLabel(session, walkinCount(st.sessions)),
+          label: labelOf(st.settings, session, walkinCount(st.sessions)),
           startedAt: session.startedAt,
           closedAt: now,
           elapsedMs: q.elapsed,
@@ -203,12 +247,14 @@ export const useClub = create<State>()(
           undo: [],
           sheets: [{ id: uid(), kind: "receipt", billId: bill.id }],
         });
-        toast(voided ? "Hisob bekor qilindi" : `Yopildi · ${formatSom(q.total)}`);
+        if (voided) say("toast.voided");
+        else say("toast.closed", { total: formatSom(q.total) });
       };
 
       return {
         settings: DEFAULT_SETTINGS,
-        menu: DEFAULT_MENU,
+        cloud: { isAdmin: false, premiumRequested: false },
+        menu: [],
         sessions: [],
         bills: [],
         walkinSeq: 0,
@@ -216,6 +262,7 @@ export const useClub = create<State>()(
         sheets: [],
         entry: null,
         undo: [],
+        arranging: false,
 
         pressTable: (n) => {
           const st = get();
@@ -223,8 +270,12 @@ export const useClub = create<State>()(
             get().pressDigit(String(n));
             return;
           }
-          if (n > st.settings.tableCount) return;
           const existing = st.sessions.find((s) => s.kind === "table" && s.table === n);
+          // A table already running stays reachable even if Premium lapsed, so its bill can close.
+          if (!existing && n > activeTables(st.settings)) {
+            if (!st.settings.premium && n > FREE_TABLE_LIMIT) get().pushSheet({ kind: "premium" });
+            return;
+          }
           if (!existing) {
             const session = makeTable(n);
             set({
@@ -285,7 +336,7 @@ export const useClub = create<State>()(
           }
           const last = st.undo[st.undo.length - 1];
           if (!last) {
-            toast("Bekor qilinadigan amal yo'q");
+            say("toast.nothingToUndo");
             return;
           }
           const undo = st.undo.slice(0, -1);
@@ -335,7 +386,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.kind === "walkin") {
-            toast("Tashqida vaqt yurmaydi");
+            say("toast.walkinNoTime");
             return;
           }
           const now = Date.now();
@@ -356,7 +407,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.items.length === 0) {
-            toast("Olib tashlash uchun buyurtma yo'q");
+            say("toast.nothingToRemove");
             return;
           }
           const items = session.items.map((item) => ({ ...item }));
@@ -409,7 +460,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.kind === "walkin") {
-            toast("Tashqi hisobda VIP yo'q");
+            say("toast.walkinNoVip");
             return;
           }
           const { settings } = get();
@@ -418,7 +469,13 @@ export const useClub = create<State>()(
             {
               ...session,
               vip,
-              ratePerHour: vip ? settings.vipRate : settings.rate,
+              // A walk-in has no unit: it uses the club rates.
+              ratePerHour:
+                session.kind === "table" && session.table !== null
+                  ? unitRate(settings, session.table, vip)
+                  : vip
+                    ? settings.vipRate
+                    : settings.rate,
             },
             session,
           );
@@ -454,13 +511,13 @@ export const useClub = create<State>()(
           const amount = Number(st.entry?.buffer ?? "0");
           if (!session || !st.entry) return;
           if (!Number.isFinite(amount) || amount <= 0) {
-            toast("Summa kiriting");
+            say("toast.enterAmount");
             return;
           }
           const line: LineItem = {
             id: uid(),
             menuId: "custom",
-            name: "Qo'shimcha",
+            name: translate(st.settings.lang, "item.extra"),
             price: Math.round(amount),
             qty: 1,
           };
@@ -550,7 +607,7 @@ export const useClub = create<State>()(
           if (!session) return;
           if (session.kind === "table" && session.table === table) return;
           if (st.sessions.some((s) => s.kind === "table" && s.table === table)) {
-            toast("Bu stol band");
+            say("toast.busy", { place: labelOf(st.settings, { kind: "table", table, seq: 0 }) });
             return;
           }
           const vip = st.settings.vipTables.includes(table);
@@ -564,7 +621,7 @@ export const useClub = create<State>()(
                   pausedMs: 0,
                   pauseStartedAt: null,
                   vip,
-                  ratePerHour: vip ? st.settings.vipRate : st.settings.rate,
+                  ratePerHour: unitRate(st.settings, table, vip),
                 }
               : { ...session, table };
           set({
@@ -573,9 +630,8 @@ export const useClub = create<State>()(
             focusId: session.id,
             sheets: st.sheets.slice(0, -1),
           });
-          toast(
-            session.kind === "walkin" ? `Stol ${table} — vaqt boshlandi` : `Stol ${table} ga ko'chdi`,
-          );
+          const place = labelOf(st.settings, { kind: "table", table, seq: 0 });
+          say(session.kind === "walkin" ? "toast.movedStart" : "toast.moved", { place });
         },
 
         closeBill: (sessionId, cash, card) => finish(sessionId, false, cash, card),
@@ -585,21 +641,75 @@ export const useClub = create<State>()(
           set((st) => ({ settings: { ...st.settings, ...partial } })),
 
         setTableCount: (count) => {
-          const blocking = get().sessions.some(
-            (s) => s.kind === "table" && s.table !== null && s.table > count,
-          );
-          if (blocking) {
-            toast("Avval yuqori raqamli stolni yoping");
+          const st = get();
+          const next = Math.max(1, Math.min(MAX_TABLES, Math.round(count)));
+          if (next > tableLimit(st.settings)) {
+            get().pushSheet({ kind: "premium" });
             return;
           }
+          const blocking = st.sessions.some(
+            (s) => s.kind === "table" && s.table !== null && s.table > next,
+          );
+          if (blocking) {
+            say("toast.closeHigherFirst");
+            return;
+          }
+          set({
+            settings: {
+              ...st.settings,
+              tableCount: next,
+              vipTables: st.settings.vipTables.filter((n) => n <= next),
+            },
+          });
+        },
+
+        completeSetup: ({ clubName, tableCount, rate, vipRate, sampleMenu }) =>
           set((st) => ({
             settings: {
               ...st.settings,
-              tableCount: count,
-              vipTables: st.settings.vipTables.filter((n) => n <= count),
+              clubName: clubName.trim() || DEFAULT_SETTINGS.clubName,
+              tableCount: Math.max(1, Math.min(tableLimit(st.settings), Math.round(tableCount))),
+              rate: Math.max(0, Math.round(rate)),
+              vipRate: Math.max(0, Math.round(vipRate)),
+              setupDone: true,
             },
-          }));
-        },
+            menu: sampleMenu ? SAMPLE_MENU.map((item) => ({ ...item, id: uid() })) : st.menu,
+          })),
+
+        saveMenuItem: ({ id, name, price, category }) =>
+          set((st) => {
+            const clean = { name: name.trim(), price: Math.max(0, Math.round(price)), category };
+            if (!clean.name) return {};
+            return {
+              menu: id
+                ? st.menu.map((item) => (item.id === id ? { ...item, ...clean } : item))
+                : [...st.menu, { id: uid(), ...clean }],
+            };
+          }),
+
+        removeMenuItem: (id) => set((st) => ({ menu: st.menu.filter((item) => item.id !== id) })),
+
+        // The server decides Premium; the local flag only mirrors it for offline use.
+        applyCloud: ({ premium, premiumRequested, isAdmin }) =>
+          set((st) => ({
+            settings: { ...st.settings, premium },
+            cloud: { isAdmin, premiumRequested },
+          })),
+
+        setUnit: (n, patch) =>
+          set((st) => {
+            const units = { ...st.settings.units };
+            const next = patch ? { ...units[String(n)], ...patch } : {};
+            for (const key of Object.keys(next) as (keyof UnitConfig)[]) {
+              if (next[key] === undefined || next[key] === "") delete next[key];
+            }
+            if (Object.keys(next).length) units[String(n)] = next;
+            else delete units[String(n)];
+            return { settings: { ...st.settings, units } };
+          }),
+
+        markPremiumRequested: () =>
+          set((st) => ({ cloud: { ...st.cloud, premiumRequested: true } })),
 
         toggleVipTable: (table) =>
           set((st) => {
@@ -614,22 +724,36 @@ export const useClub = create<State>()(
             };
           }),
 
-        setMenuPrice: (id, price) =>
-          set((st) => ({
-            menu: st.menu.map((item) =>
-              item.id === id ? { ...item, price: Math.max(0, Math.round(price)) } : item,
-            ),
-          })),
-
         setClubName: (name) =>
           set((st) => ({
-            settings: { ...st.settings, clubName: name.trim() || "Bilyard klub" },
+            settings: { ...st.settings, clubName: name.trim() || translate(st.settings.lang, "onb.namePh") },
           })),
+
+        setKeyLayout: (order) => set((st) => ({ settings: { ...st.settings, keyLayout: [...order] } })),
+
+        resetKeyLayout: () =>
+          set((st) => ({ settings: { ...st.settings, keyLayout: [...DEFAULT_SETTINGS.keyLayout] } })),
+
+        // Not while an amount is being typed: the keys are digits then.
+        startArranging: () => {
+          if (get().entry) return;
+          set({ arranging: true, sheets: [] });
+        },
+
+        stopArranging: () => set({ arranging: false }),
       };
     },
     {
       name: "stol-club-v1",
-      version: 1,
+      version: 2,
+      // v1 had no setup step and a fixed 9-table keypad: those clubs are already set up.
+      migrate: (persisted, version) => {
+        const saved = (persisted ?? {}) as Partial<State>;
+        if (version < 2 && saved.settings) {
+          saved.settings = { ...saved.settings, setupDone: true };
+        }
+        return saved as State;
+      },
       partialize: (state) => ({
         settings: state.settings,
         menu: state.menu,
@@ -638,6 +762,10 @@ export const useClub = create<State>()(
         walkinSeq: state.walkinSeq,
         focusId: state.focusId,
       }),
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<State>;
+        return { ...current, ...saved, settings: { ...current.settings, ...saved.settings } };
+      },
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         if (state.focusId && !state.sessions.some((s) => s.id === state.focusId)) {

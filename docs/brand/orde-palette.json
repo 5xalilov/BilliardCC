@@ -1,0 +1,56 @@
+{
+  "name": "STOL",
+  "modes": {
+    "tun": {
+      "bg": "#000000",
+      "sheet": "#171514",
+      "key": "#322f2c",
+      "elev": "#2e2b28",
+      "fn": "#5a554f",
+      "line": "#3d3936",
+      "fg": "#f7f6f4",
+      "muted": "#c2bcb4",
+      "op": "#ff7d0a",
+      "on-op": "#160a00",
+      "op-ink": "#ff9a3d",
+      "live": "#ff7d0a"
+    },
+    "kun": {
+      "bg": "#f7f6f4",
+      "sheet": "#ffffff",
+      "key": "#e1dcd4",
+      "elev": "#e9e4dc",
+      "fn": "#c9c1b6",
+      "line": "#d2ccc2",
+      "fg": "#151311",
+      "muted": "#5c5650",
+      "op": "#ff7d0a",
+      "on-op": "#160a00",
+      "op-ink": "#a84400",
+      "live": "#a84400"
+    }
+  },
+  "pairs": [
+    ["fg", "bg", "text"],
+    ["fg", "sheet", "text"],
+    ["fg", "elev", "text"],
+    ["muted", "bg", "text"],
+    ["muted", "sheet", "text"],
+    ["muted", "elev", "text"],
+    ["fg", "key", "large"],
+    ["fg", "fn", "large"],
+    ["on-op", "op", "text"],
+    ["bg", "fg", "text"],
+    ["op-ink", "bg", "text"],
+    ["op-ink", "sheet", "text"],
+    ["op-ink", "elev", "text"],
+    ["live", "key", "ui"],
+    ["muted", "key", "ui"],
+    ["op", "bg", "sep"],
+    ["key", "bg", "sep"],
+    ["fn", "key", "sep"],
+    ["fn", "elev", "sep"],
+    ["elev", "sheet", "sep"],
+    ["line", "sheet", "sep"]
+  ]
+}

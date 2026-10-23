@@ -1,16 +1,62 @@
 @import "tailwindcss";
 
+/* Orde brand palette — "Tun" (night) is the default; "Kun" (day) below.
+   Stol Orange #ff7d0a is identical in both modes and always carries dark text.
+   Brand book: docs/brand/ORDE.md · contrast audit: docs/brand/stol-palette.json */
 @theme {
   --color-bg: #000000;
-  --color-fg: #ffffff;
-  --color-muted: #a1a1a6;
-  --color-key: #333333;
-  --color-fn: #636366;
-  --color-op: #ff9f0a;
-  --color-sheet: #1c1c1e;
-  --color-elev: #2c2c2e;
-  --color-line: #3a3a3c;
+  --color-sheet: #171514;
+  --color-key: #322f2c;
+  --color-elev: #2e2b28;
+  --color-fn: #5a554f;
+  --color-line: #3d3936;
+  --color-fg: #f7f6f4;
+  --color-muted: #c2bcb4;
+  --color-op: #ff7d0a;
+  --color-on-op: #160a00;
+  --color-op-ink: #ff9a3d;
+  --color-live: #ff7d0a;
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
+}
+
+:root {
+  /* Keys stand off the background: a hairline edge plus a soft drop shadow. */
+  --key-edge: rgb(255 255 255 / 0.1);
+  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 6px rgb(0 0 0 / 0.55);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --key-edge: rgb(21 19 17 / 0.12);
+  --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
+  --color-bg: #f7f6f4;
+  --color-sheet: #ffffff;
+  --color-key: #e1dcd4;
+  --color-elev: #e9e4dc;
+  --color-fn: #c9c1b6;
+  --color-line: #d2ccc2;
+  --color-fg: #151311;
+  --color-muted: #5c5650;
+  --color-op-ink: #a84400;
+  --color-live: #a84400;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --key-edge: rgb(21 19 17 / 0.12);
+    --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
+    --color-bg: #f7f6f4;
+    --color-sheet: #ffffff;
+    --color-key: #e1dcd4;
+    --color-elev: #e9e4dc;
+    --color-fn: #c9c1b6;
+    --color-line: #d2ccc2;
+    --color-fg: #151311;
+    --color-muted: #5c5650;
+    --color-op-ink: #a84400;
+    --color-live: #a84400;
+  }
 }
 
 @layer base {
@@ -45,9 +91,18 @@
     scale 150ms ease-out,
     filter 150ms ease-out,
     background-color 150ms ease-out,
-    color 150ms ease-out;
+    color 150ms ease-out,
+    box-shadow 150ms ease-out;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Filled keys only — text-only toggles stay flat. --key-ring carries live/paused state. */
+.key[class*="bg-"] {
+  box-shadow:
+    var(--key-ring, 0 0 #0000),
+    inset 0 0 0 1px var(--key-edge),
+    var(--key-shadow);
 }
 
 .key:hover:not(:disabled) {
@@ -58,17 +113,91 @@
   scale: 0.96;
 }
 
+.key:active:not(:disabled)[class*="bg-"] {
+  box-shadow:
+    var(--key-ring, 0 0 #0000),
+    inset 0 0 0 1px var(--key-edge);
+}
+
 .key:disabled {
   opacity: 0.28;
   filter: none;
 }
 
 .key-live {
-  box-shadow: inset 0 0 0 2px var(--color-op);
+  --key-ring: inset 0 0 0 2px var(--color-live);
 }
 
 .key-paused {
-  box-shadow: inset 0 0 0 2px var(--color-muted);
+  --key-ring: inset 0 0 0 2px var(--color-muted);
+}
+
+/* Mode-specific artwork: show the Tun or Kun variant, following the same rules as the tokens. */
+.only-kun {
+  display: none;
+}
+
+:root[data-theme="light"] .only-tun {
+  display: none;
+}
+
+:root[data-theme="light"] .only-kun {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .only-tun {
+    display: none;
+  }
+
+  :root:not([data-theme]) .only-kun {
+    display: block;
+  }
+}
+
+/* Key tour: the spotlight glides between keys, the card floats in. */
+.tour-spot {
+  --tour-dim: rgb(0 0 0 / 0.66);
+  box-shadow:
+    0 0 0 2px var(--color-op),
+    0 0 0 200vmax var(--tour-dim);
+  transition:
+    left 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 320ms ease;
+}
+
+:root[data-theme="light"] .tour-spot {
+  --tour-dim: rgb(21 19 17 / 0.5);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .tour-spot {
+    --tour-dim: rgb(21 19 17 / 0.5);
+  }
+}
+
+.tour-card {
+  animation: tour-in 260ms ease-out both;
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot {
+    transition: none;
+  }
+
+  .tour-card {
+    animation: none;
+  }
 }
 
 .display-num {
