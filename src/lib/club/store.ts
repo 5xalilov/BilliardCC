@@ -10,7 +10,6 @@ import {
   formatSom,
   unitRate,
   quote,
-  sessionLabel,
   tableLimit,
   uid,
   type Bill,
@@ -21,6 +20,8 @@ import {
   type UnitConfig,
 } from "@/lib/club/logic";
 import type { SyncResult } from "@/lib/club/cloud";
+import { placeLabel } from "@/lib/club/labels";
+import { translate, type TKey, type TVars } from "@/lib/i18n";
 
 export type Sheet =
   | { id: string; kind: "bar" }
@@ -122,8 +123,18 @@ type State = {
   stopArranging: () => void;
 };
 
+// Toasts and bill labels follow the club's language; the store isn't a component, so it
+// reads the language straight from state.
+function say(key: TKey, vars?: TVars) {
+  toast(translate(useClub.getState().settings.lang, key, vars));
+}
+
 function needFocus() {
-  toast("Avval stolni yoki tashqini tanlang");
+  say("toast.pickFirst");
+}
+
+function labelOf(settings: Settings, place: Pick<Session, "kind" | "table" | "seq">, walkins?: number) {
+  return placeLabel(settings, settings.lang, place, walkins);
 }
 
 function walkinCount(sessions: Session[]) {
@@ -211,7 +222,7 @@ export const useClub = create<State>()(
           kind: session.kind,
           table: session.table,
           seq: session.seq,
-          label: sessionLabel(session, walkinCount(st.sessions)),
+          label: labelOf(st.settings, session, walkinCount(st.sessions)),
           startedAt: session.startedAt,
           closedAt: now,
           elapsedMs: q.elapsed,
@@ -236,7 +247,8 @@ export const useClub = create<State>()(
           undo: [],
           sheets: [{ id: uid(), kind: "receipt", billId: bill.id }],
         });
-        toast(voided ? "Hisob bekor qilindi" : `Yopildi · ${formatSom(q.total)}`);
+        if (voided) say("toast.voided");
+        else say("toast.closed", { total: formatSom(q.total) });
       };
 
       return {
@@ -324,7 +336,7 @@ export const useClub = create<State>()(
           }
           const last = st.undo[st.undo.length - 1];
           if (!last) {
-            toast("Bekor qilinadigan amal yo'q");
+            say("toast.nothingToUndo");
             return;
           }
           const undo = st.undo.slice(0, -1);
@@ -374,7 +386,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.kind === "walkin") {
-            toast("Tashqida vaqt yurmaydi");
+            say("toast.walkinNoTime");
             return;
           }
           const now = Date.now();
@@ -395,7 +407,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.items.length === 0) {
-            toast("Olib tashlash uchun buyurtma yo'q");
+            say("toast.nothingToRemove");
             return;
           }
           const items = session.items.map((item) => ({ ...item }));
@@ -448,7 +460,7 @@ export const useClub = create<State>()(
             return;
           }
           if (session.kind === "walkin") {
-            toast("Tashqi hisobda VIP yo'q");
+            say("toast.walkinNoVip");
             return;
           }
           const { settings } = get();
@@ -499,13 +511,13 @@ export const useClub = create<State>()(
           const amount = Number(st.entry?.buffer ?? "0");
           if (!session || !st.entry) return;
           if (!Number.isFinite(amount) || amount <= 0) {
-            toast("Summa kiriting");
+            say("toast.enterAmount");
             return;
           }
           const line: LineItem = {
             id: uid(),
             menuId: "custom",
-            name: "Qo'shimcha",
+            name: translate(st.settings.lang, "item.extra"),
             price: Math.round(amount),
             qty: 1,
           };
@@ -595,7 +607,7 @@ export const useClub = create<State>()(
           if (!session) return;
           if (session.kind === "table" && session.table === table) return;
           if (st.sessions.some((s) => s.kind === "table" && s.table === table)) {
-            toast("Bu stol band");
+            say("toast.busy", { place: labelOf(st.settings, { kind: "table", table, seq: 0 }) });
             return;
           }
           const vip = st.settings.vipTables.includes(table);
@@ -618,9 +630,8 @@ export const useClub = create<State>()(
             focusId: session.id,
             sheets: st.sheets.slice(0, -1),
           });
-          toast(
-            session.kind === "walkin" ? `Stol ${table} — vaqt boshlandi` : `Stol ${table} ga ko'chdi`,
-          );
+          const place = labelOf(st.settings, { kind: "table", table, seq: 0 });
+          say(session.kind === "walkin" ? "toast.movedStart" : "toast.moved", { place });
         },
 
         closeBill: (sessionId, cash, card) => finish(sessionId, false, cash, card),
@@ -640,7 +651,7 @@ export const useClub = create<State>()(
             (s) => s.kind === "table" && s.table !== null && s.table > next,
           );
           if (blocking) {
-            toast("Avval yuqori raqamli stolni yoping");
+            say("toast.closeHigherFirst");
             return;
           }
           set({
@@ -715,7 +726,7 @@ export const useClub = create<State>()(
 
         setClubName: (name) =>
           set((st) => ({
-            settings: { ...st.settings, clubName: name.trim() || "Bilyard klub" },
+            settings: { ...st.settings, clubName: name.trim() || translate(st.settings.lang, "onb.namePh") },
           })),
 
         setKeyLayout: (order) => set((st) => ({ settings: { ...st.settings, keyLayout: [...order] } })),

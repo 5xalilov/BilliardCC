@@ -874,6 +874,14 @@ function SettingsSheet() {
       <button
         type="button"
         className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
+        onClick={() => useClub.getState().startArranging()}
+      >
+        {t("keyMenu.arrange")}
+        <ChevronLeft className="size-4 rotate-180" />
+      </button>
+      <button
+        type="button"
+        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
         onClick={() => useClub.getState().pushSheet({ kind: "help" })}
       >
         {t("settings.help")}

@@ -194,6 +194,8 @@ export const uz = {
 
   "guide.tables.title": "{units}",
   "guide.tables.text": "Raqamni bosing — vaqt boshlanadi. Ishlayotganini yana bosing — hisob ochiladi.",
+  "guide.hold.title": "Bosib turish",
+  "guide.hold.text": "Har qanday tugmani bosib tursangiz — qo'shimcha amallar: VIP, narx, bar, tugmalarni joylashtirish.",
   "guide.locked.title": "Qulfli joylar",
   "guide.locked.text": "Bepul tarifda {free} ta. Qolganlari Premium bilan ochiladi.",
   "guide.bar.title": "BAR",
@@ -241,6 +243,8 @@ export const uz = {
   "display.open": "OCHIQ HISOB",
   "display.openCount": "{n} ta ochiq",
   "display.extra": "QO'SHIMCHA",
+  "display.time": "vaqt",
+  "display.bar": "bar",
   "display.currency": "so'm",
   "aria.history": "Tarix",
   "aria.settings": "Sozlamalar",

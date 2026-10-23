@@ -212,15 +212,6 @@ export function billedMinutes(elapsed: number, roundUp: number) {
   return Math.ceil(minutes / roundUp) * roundUp;
 }
 
-export function sessionLabel(
-  s: Pick<Session, "kind" | "table" | "seq">,
-  walkinCount = 1,
-) {
-  if (s.kind === "table") return `Stol ${s.table}`;
-  if (walkinCount > 1) return `Tashqi ${s.seq}`;
-  return "Tashqi";
-}
-
 export type Quote = {
   elapsed: number;
   minutes: number;

@@ -4,6 +4,7 @@
 // business kind's plural noun) and {free} (free unit limit) as placeholders.
 export type GuideTarget =
   | "tables"
+  | "hold"
   | "locked"
   | "bar"
   | "pause"
@@ -14,8 +15,10 @@ export type GuideTarget =
   | "clear"
   | "header";
 
-export const GUIDE: readonly { target: GuideTarget }[] = [
+// spot: which data-tour element to light up when it isn't the target itself.
+export const GUIDE: readonly { target: GuideTarget; spot?: string }[] = [
   { target: "tables" },
+  { target: "hold", spot: "tables" },
   { target: "locked" },
   { target: "bar" },
   { target: "pause" },

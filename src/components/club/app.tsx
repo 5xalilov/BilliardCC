@@ -19,10 +19,9 @@ import {
   formatClock,
   formatSom,
   quote,
-  sessionLabel,
 } from "@/lib/club/logic";
 import { useClub } from "@/lib/club/store";
-import { useT } from "@/lib/i18n/use-t";
+import { usePlaceLabel, useT } from "@/lib/i18n/use-t";
 
 // Inside Telegram, report the club to the server and take back Premium / admin access.
 // Runs on open, when the club's name or size changes, and when the app comes back to front
@@ -86,6 +85,7 @@ function ClubScreen() {
   const settings = useClub((s) => s.settings);
   const sheetsOpen = useClub((s) => s.sheets.length > 0);
   const t = useT();
+  const placeName = usePlaceLabel();
   const arrange = useArrange();
   const arranging = arrange.arranging;
   const [menu, setMenu] = useState<KeyMenuTarget | null>(null);
@@ -152,24 +152,24 @@ function ClubScreen() {
   );
 
   // Only data on the display — how the keys work is taught once, in onboarding.
-  let label = "OCHIQ HISOB";
+  let label = t("display.open");
   let amount = formatSom(openTotal);
-  let hint = sessions.length > 0 ? `${sessions.length} ta ochiq` : "";
+  let hint = sessions.length > 0 ? t("display.openCount", { n: sessions.length }) : "";
 
   if (typing && focused) {
-    label = `QO'SHIMCHA · ${sessionLabel(focused, walkins).toUpperCase()}`;
+    label = `${t("display.extra")} · ${placeName(focused, walkins).toUpperCase()}`;
     amount = formatSom(Number(entry.buffer));
     hint = "";
   } else if (focused) {
     const q = quote(focused, now, settings.roundUp);
-    label = sessionLabel(focused, walkins).toUpperCase();
+    label = placeName(focused, walkins).toUpperCase();
     if (focused.vip) label += " · VIP";
-    if (focused.pauseStartedAt) label += " · PAUZA";
+    if (focused.pauseStartedAt) label += ` · ${t("key.pause")}`;
     amount = formatSom(q.total);
     if (focused.kind === "walkin") {
-      hint = `bar ${formatSom(q.bar)}`;
+      hint = `${t("display.bar")} ${formatSom(q.bar)}`;
     } else {
-      hint = `${formatClock(q.elapsed)} · vaqt ${formatSom(q.time)} · bar ${formatSom(q.bar)}`;
+      hint = `${formatClock(q.elapsed)} · ${t("display.time")} ${formatSom(q.time)} · ${t("display.bar")} ${formatSom(q.bar)}`;
     }
     if (focused.discountPct) hint += ` · −${focused.discountPct}%`;
   }
@@ -210,7 +210,7 @@ function ClubScreen() {
         <button
           type="button"
           className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
-          aria-label="Tarix"
+          aria-label={t("aria.history")}
           onClick={() => useClub.getState().pushSheet({ kind: "history" })}
         >
           <History className="size-5" strokeWidth={1.75} />
@@ -219,7 +219,7 @@ function ClubScreen() {
         <button
           type="button"
           className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
-          aria-label="Sozlamalar"
+          aria-label={t("aria.settings")}
           onClick={() => useClub.getState().pushSheet({ kind: "settings" })}
         >
           <SlidersHorizontal className="size-5" strokeWidth={1.75} />
@@ -228,13 +228,13 @@ function ClubScreen() {
 
       <button
         type="button"
-        aria-label={typing ? "Qo'shimcha summa" : focused ? "Joriy hisob" : "Ochiq hisob"}
+        aria-label={t(typing ? "aria.amount" : focused ? "aria.current" : "aria.openTotal")}
         onClick={onDisplay}
         className="flex min-h-0 flex-1 flex-col justify-end overflow-hidden px-5 pb-4 text-right"
       >
         <span className="mb-2 flex items-baseline justify-between gap-3">
           <span className="text-sm font-medium tracking-widest text-muted">{label}</span>
-          <span className="text-sm text-muted">so'm</span>
+          <span className="text-sm text-muted">{t("display.currency")}</span>
         </span>
         <span className="display-num text-fg" data-len={displayBucket(amount)}>
           {amount}
@@ -242,11 +242,11 @@ function ClubScreen() {
         <span className="mt-3 block min-h-5 text-sm text-muted">{hint}</span>
       </button>
 
-      <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label="Boshqaruv">
-        <Key slot={slot("undo")} kind="symbol" tone="fn" tour="clear" ariaLabel="Bekor qilish" onClick={() => useClub.getState().pressUndo()}>
+      <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label={t("aria.keypad")}>
+        <Key slot={slot("undo")} kind="symbol" tone="fn" tour="clear" ariaLabel={t("aria.undo")} onClick={() => useClub.getState().pressUndo()}>
           <Delete className="size-6" strokeWidth={1.75} />
         </Key>
-        <Key slot={slot("ac")} kind="symbol" tone="fn" tour="clear" label="AC" ariaLabel="Tozalash" onClick={() => useClub.getState().pressAC()} />
+        <Key slot={slot("ac")} kind="symbol" tone="fn" tour="clear" label="AC" ariaLabel={t("aria.clear")} onClick={() => useClub.getState().pressAC()} />
         <Key
           slot={slot("discount")}
           kind={focused && focused.discountPct && !typing ? "word" : "symbol"}
@@ -255,18 +255,18 @@ function ClubScreen() {
           disabled={typing}
           label={focused && focused.discountPct && !typing ? `${focused.discountPct}%` : "%"}
           tour="discount"
-          ariaLabel="Chegirma"
+          ariaLabel={t("aria.discount")}
           onClick={() => useClub.getState().pressDiscount()}
         />
         <Key
           slot={slot("bar")}
           kind="word"
           tone="op"
-          label="BAR"
+          label={t("key.bar")}
           badge={typing ? 0 : barQty}
           disabled={typing}
           tour="bar"
-          ariaLabel="Bar"
+          ariaLabel={t("aria.bar")}
           onClick={() => useClub.getState().pressBar()}
         />
 
@@ -286,19 +286,19 @@ function ClubScreen() {
           tone="op"
           active={paused && !typing}
           disabled={typing}
-          label={paused && !typing ? "DAVOM" : "PAUZA"}
+          label={t(paused && !typing ? "key.resume" : "key.pause")}
           tour="pause"
-          ariaLabel={paused ? "Davom ettirish" : "Pauza"}
+          ariaLabel={t(paused ? "aria.resume" : "aria.pause")}
           onClick={() => useClub.getState().pressPause()}
         />
         <Key
           slot={slot("remove")}
           kind="word"
           tone="op"
-          label="AYIR"
+          label={t("key.remove")}
           disabled={typing}
           tour="addsub"
-          ariaLabel="Ayirish"
+          ariaLabel={t("aria.remove")}
           onClick={() => useClub.getState().pressRemove()}
         />
         <Key
@@ -306,9 +306,9 @@ function ClubScreen() {
           kind="word"
           tone="op"
           active={typing}
-          label="QO'SH"
+          label={t("key.add")}
           tour="addsub"
-          ariaLabel="Qo'shish"
+          ariaLabel={t("aria.add")}
           onClick={() => useClub.getState().pressAdd()}
         />
 
@@ -316,22 +316,22 @@ function ClubScreen() {
           slot={slot("transfer")}
           kind="word"
           tone="fn"
-          label="KO'CH"
+          label={t("key.move")}
           disabled={typing}
           tour="bottom"
-          ariaLabel="Ko'chirish"
+          ariaLabel={t("aria.move")}
           onClick={() => useClub.getState().pressTransfer()}
         />
         <Key
           slot={slot("walkin")}
-          kind={typing ? "digit" : "digit"}
+          kind="digit"
           tone="num"
           label="0"
-          sub={typing ? undefined : "tashqi"}
+          sub={typing ? undefined : t("key.walkinSub")}
           active={!typing && focused?.kind === "walkin"}
           live={!typing && walkins > 0 && focused?.kind !== "walkin"}
           tour="bottom"
-          ariaLabel="Tashqi"
+          ariaLabel={t("aria.walkin")}
           onClick={() => useClub.getState().pressWalkin()}
         />
         <Key
@@ -341,10 +341,10 @@ function ClubScreen() {
           active={!typing && Boolean(focused?.vip)}
           label={typing ? "000" : "VIP"}
           tour="bottom"
-          ariaLabel={typing ? "Ming qo'shish" : "VIP narx"}
+          ariaLabel={t(typing ? "aria.thousand" : "aria.vip")}
           onClick={() => useClub.getState().pressVip()}
         />
-        <Key slot={slot("hisob")} kind="word" tone="op" tour="hisob" label="HISOB" ariaLabel="Hisob" onClick={() => useClub.getState().pressHisob()} />
+        <Key slot={slot("hisob")} kind="word" tone="op" tour="hisob" label={t("key.bill")} ariaLabel={t("aria.bill")} onClick={() => useClub.getState().pressHisob()} />
       </section>
       {menu ? (
         <KeyMenu
@@ -449,18 +449,20 @@ function TableKey({
   onMenu?: UnitMenuOpener;
 }) {
   const session = useClub((s) => s.sessions.find((x) => x.kind === "table" && x.table === n));
+  const t = useT();
+  const place = usePlaceLabel()({ kind: "table", table: n, seq: 0 });
   const lockedPress = useLongPress(onMenu && locked && off && !session ? (el) => onMenu(n, true, el) : undefined);
   const focusId = useClub((s) => s.focusId);
   const focused = Boolean(session) && session?.id === focusId;
   const paused = Boolean(session?.pauseStartedAt);
-  const sub = session ? (paused ? "pauza" : formatClock(elapsedMs(session, now))) : undefined;
+  const sub = session ? (paused ? t("key.paused") : formatClock(elapsedMs(session, now))) : undefined;
 
   if (off && !session) {
     // Locked keys stay tappable (they open Premium); a free club's unused 1–3 keys are just off.
     return (
       <button
         type="button"
-        aria-label={locked ? `Stol ${n} — Premium` : `Stol ${n} — o'chiq`}
+        aria-label={t(locked ? "aria.unitLocked" : "aria.unitOff", { place })}
         disabled={!locked}
         data-tour={n === FREE_TABLE_LIMIT + 1 ? "locked" : undefined}
         {...lockedPress.handlers}
@@ -491,7 +493,7 @@ function TableKey({
       active={focused}
       live={Boolean(session) && !focused && !paused}
       paused={paused && !focused}
-      ariaLabel={`Stol ${n}`}
+      ariaLabel={place}
       slot={{ lifted, onLongPress: onMenu ? (el) => onMenu(n, locked, el) : undefined }}
       onClick={() => useClub.getState().pressTable(n)}
     />

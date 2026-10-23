@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { FREE_TABLE_LIMIT } from "@/lib/club/logic";
-import { GUIDE, type GuideTarget } from "@/lib/club/guide";
+import { GUIDE } from "@/lib/club/guide";
 import { useT } from "@/lib/i18n/use-t";
 import { useClub } from "@/lib/club/store";
 
@@ -26,7 +26,7 @@ export function Tour() {
   const active = useClub((s) => s.settings.setupDone && !s.settings.tourDone && s.sheets.length === 0);
   const t = useT();
   const business = useClub((s) => s.settings.business);
-  const [steps, setSteps] = useState<GuideTarget[]>([]);
+  const [steps, setSteps] = useState<(typeof GUIDE)[number][]>([]);
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
@@ -34,16 +34,17 @@ export function Tour() {
   // Only steps whose keys are on screen (e.g. no "locked" step for a Premium club).
   useLayoutEffect(() => {
     if (!active) return;
-    setSteps(GUIDE.map((step) => step.target).filter((target) => measure(target)));
+    setSteps(GUIDE.filter((step) => measure(step.spot ?? step.target)));
     setIndex(0);
   }, [active]);
 
-  const step = steps[index];
+  const step = steps[index]?.target;
+  const spot = steps[index] ? (steps[index].spot ?? steps[index].target) : undefined;
 
   const place = useCallback(() => {
     setViewport({ w: window.innerWidth, h: window.innerHeight });
-    setRect(step ? measure(step) : null);
-  }, [step]);
+    setRect(spot ? measure(spot) : null);
+  }, [spot]);
 
   useLayoutEffect(() => {
     if (active) place();

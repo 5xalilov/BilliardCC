@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { useNow } from "@/components/club/now";
 import { cn } from "@/lib/cn";
-import { formatClock, formatSom, quote, unitConfig, unitKind, unitRate, type Settings } from "@/lib/club/logic";
+import { formatClock, formatSom, quote, unitRate } from "@/lib/club/logic";
 import { useClub } from "@/lib/club/store";
-import { useT } from "@/lib/i18n/use-t";
+import { usePlaceLabel, useT } from "@/lib/i18n/use-t";
 
 // Long-press context menu for keypad keys (iOS style): the held key lifts, the rest of the
 // screen dims, and a compact menu floats next to the key.
@@ -179,16 +179,12 @@ export function KeyMenu({
   );
 }
 
-function unitTitle(settings: Settings, n: number, t: ReturnType<typeof useT>) {
-  return unitConfig(settings, n).name || `${t(`unit.${unitKind(settings, n)}`)} ${n}`;
-}
-
 function UnitMenu({ n, locked, onClose }: { n: number; locked: boolean; onClose: () => void }) {
   const t = useT();
   const now = useNow();
   const settings = useClub((s) => s.settings);
   const session = useClub((s) => s.sessions.find((x) => x.kind === "table" && x.table === n));
-  const title = unitTitle(settings, n, t);
+  const title = usePlaceLabel()({ kind: "table", table: n, seq: 0 });
 
   // Every action is an existing keypad action on the focused session — no logic of its own.
   const run = (action: (api: ReturnType<typeof useClub.getState>) => void) => () => {
