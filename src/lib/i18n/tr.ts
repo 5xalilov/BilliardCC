@@ -141,6 +141,7 @@ export const tr: Partial<Dict> = {
   "theme.dark": "Gece",
   "settings.name": "Ad",
   "settings.clubName": "Kulüp adı",
+  "settings.general": "Genel",
   "settings.count": "Sayı",
   "settings.prices": "Fiyatlar",
   "settings.rate": "Saatlik ücret",

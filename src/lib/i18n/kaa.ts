@@ -142,6 +142,7 @@ export const kaa: Partial<Dict> = {
   "theme.dark": "Tún",
   "settings.name": "Atı",
   "settings.clubName": "Klub atı",
+  "settings.general": "Ulıwma",
   "settings.count": "Sanı",
   "settings.prices": "Bahalar",
   "settings.rate": "Saatlıq baha",

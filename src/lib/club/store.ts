@@ -41,7 +41,8 @@ export type Sheet =
   | { id: string; kind: "admin" }
   | { id: string; kind: "unit"; n: number }
   | { id: string; kind: "product"; itemId: string | null }
-  | { id: string; kind: "pick"; field: PickField; n?: number };
+  | { id: string; kind: "pick"; field: PickField; n?: number }
+  | { id: string; kind: "settingsPage"; page: SettingsPage };
 
 export type SheetInput =
   | { kind: "bar" }
@@ -61,10 +62,14 @@ export type SheetInput =
   | { kind: "admin" }
   | { kind: "unit"; n: number }
   | { kind: "product"; itemId: string | null }
-  | { kind: "pick"; field: PickField; n?: number };
+  | { kind: "pick"; field: PickField; n?: number }
+  | { kind: "settingsPage"; page: SettingsPage };
 
 // Single-choice picker sheets opened from settings (iOS-style list with a check mark).
 export type PickField = "lang" | "business" | "unitKind";
+
+// Settings category pages opened from the settings home.
+export type SettingsPage = "general" | "units" | "prices" | "appearance";
 
 export type SetupInput = Pick<Settings, "clubName" | "tableCount" | "rate" | "vipRate"> & {
   sampleMenu: boolean;

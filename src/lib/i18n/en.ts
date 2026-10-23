@@ -141,6 +141,7 @@ export const en: Partial<Dict> = {
   "theme.dark": "Night",
   "settings.name": "Name",
   "settings.clubName": "Club name",
+  "settings.general": "General",
   "settings.count": "Count",
   "settings.prices": "Prices",
   "settings.rate": "Hourly rate",

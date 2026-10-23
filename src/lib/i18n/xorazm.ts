@@ -144,6 +144,7 @@ export const xorazm: Partial<Dict> = {
   "theme.dark": "Gecha",
   "settings.name": "Ati",
   "settings.clubName": "Klub ati",
+  "settings.general": "Umumiy",
   "settings.count": "Sani",
   "settings.prices": "Bahalar",
   "settings.rate": "Saat bahasi",

@@ -141,6 +141,7 @@ export const ky: Partial<Dict> = {
   "theme.dark": "Түн",
   "settings.name": "Аталышы",
   "settings.clubName": "Клубдун аталышы",
+  "settings.general": "Жалпы",
   "settings.count": "Саны",
   "settings.prices": "Баалар",
   "settings.rate": "Сааттык баа",

@@ -141,6 +141,7 @@ export const ru: Partial<Dict> = {
   "theme.dark": "Ночь",
   "settings.name": "Название",
   "settings.clubName": "Название клуба",
+  "settings.general": "Основные",
   "settings.count": "Количество",
   "settings.prices": "Цены",
   "settings.rate": "Цена за час",

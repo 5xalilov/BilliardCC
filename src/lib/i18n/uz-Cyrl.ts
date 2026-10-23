@@ -130,6 +130,7 @@ export const uzCyrl: Partial<Dict> = {
   "theme.dark": "Тун",
   "settings.name": "Номи",
   "settings.clubName": "Клуб номи",
+  "settings.general": "Умумий",
   "settings.count": "Сони",
   "settings.prices": "Нархлар",
   "settings.rate": "Соат нархи",

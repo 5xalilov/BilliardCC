@@ -143,6 +143,7 @@ export const uz = {
   "theme.dark": "Tun",
   "settings.name": "Nomi",
   "settings.clubName": "Klub nomi",
+  "settings.general": "Umumiy",
   "settings.count": "Soni",
   "settings.prices": "Narxlar",
   "settings.rate": "Soat narxi",
