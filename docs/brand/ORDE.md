@@ -1,12 +1,12 @@
-# STOL — brend kitobi
+# Orde — brend kitobi
 
-STOL — bilyard klub kassasi. Bu hujjat ilovaning **o'ziga xos ko'rinishini**
+Orde — bilyard klub kassasi. Bu hujjat ilovaning **o'ziga xos ko'rinishini**
 belgilaydi: qaysi rang, qaysi shakl, qaysi qoida. Har bir ekran, ijtimoiy
-tarmoq posti, video va reklama shu qoidalarga amal qilsa, STOL qayerda
+tarmoq posti, video va reklama shu qoidalarga amal qilsa, Orde qayerda
 ko'rinsa ham tanib olinadi.
 
 Figma: https://www.figma.com/design/di3aN1oHFHyiTAda9RUnoJ (palitra doskasi +
-`STOL · Tun` va `STOL · Kun` o'zgaruvchi to'plamlari)
+`STOL · Tun` va `STOL · Kun` o'zgaruvchi to'plamlari — eski nom bilan)
 
 ## 1. Brend uchligi
 
@@ -46,7 +46,7 @@ Neytral kulranglar sof kulrang emas, **iliq ko'mir** tusida (biroz qizg'ish-
 jigarrang). Bu to'q sariq bilan bitta oila bo'lib ko'rinadi va iOS
 kalkulyatorining sovuq kulranglaridan farq qiladi.
 
-## 3. Imzo qoidalari (STOLni STOL qiladigan narsalar)
+## 3. Imzo qoidalari (Ordeni Orde qiladigan narsalar)
 
 1. **To'q sariq ustida doim qora yozuv.** Hech qachon oq emas. Favicon'dagi
    to'q sariq shar ustidagi qora "8" — shu qoidaning o'zi.
@@ -59,8 +59,10 @@ kalkulyatorining sovuq kulranglaridan farq qiladi.
    o'ng ustun, tasdiqlash tugmasi, tanlangan variant. Bezak uchun ishlatilmaydi.
 6. **Shrift — Outfit.** Katta summa yengil (300), tugma yozuvlari qalin, katta
    harf, keng oraliq bilan.
-7. **Logotip — STOL so'zi + to'q sariq chiziq.** Harflar qalin, keng oraliqli,
-   tagida kalta to'q sariq chiziq (Sozlamalar oxirida va OG rasmda).
+7. **Logotip — `orde` so'zi, birinchi "o" — to'q sariq shar.** Geometrik kichik
+   harflar, shriftsiz chizilgan (SVG). Shar ichidagi oq doira — bilyard sharidagi
+   raqam doirasi. Fayllar: `docs/brand/logo/` (tun, kun, shaffof, ikonka).
+   Ilovada: `src/components/club/logo.tsx`. Favicon va ikonka — qora fon ustida shar.
 
 ## 4. Qilmang
 
@@ -73,7 +75,7 @@ kalkulyatorining sovuq kulranglaridan farq qiladi.
 
 ## 5. Kontrast
 
-`node .grok/skills/ui-colorist/scripts/contrast.mjs docs/brand/stol-palette.json`
+`node .grok/skills/ui-colorist/scripts/contrast.mjs docs/brand/orde-palette.json`
 
 Ikkala rejimda **42/42 juftlik WCAG 2 AA dan o'tadi**. Asosiy matn 17–19:1,
 to'q sariq ustidagi yozuv 7.6:1 (AAA). APCA bo'yicha to'q sariq ustidagi
@@ -82,9 +84,9 @@ bilan ham ~55), shuning uchun tugma yozuvlari qalin va katta harfda.
 
 ## 6. Egalik haqida
 
-Ranglar va uslub STOLni **tanib olinadigan** qiladi, lekin rangni qonun
+Ranglar va uslub Ordeni **tanib olinadigan** qiladi, lekin rangni qonun
 himoya qilmaydi. Klonlarga qarshi haqiqiy himoya — **nom va logotip**:
-"STOL" va logotipni savdo belgisi sifatida ro'yxatdan o'tkazish (O'zbekistonda
+"Orde" va logotipni savdo belgisi sifatida ro'yxatdan o'tkazish (O'zbekistonda
 Intellektual mulk agentligi). Shuningdek, har bir post va videoda bir xil
 uchlik va logotipdan foydalanish kerak. Shunda nusxa ko'chirgan har qanday
-ilova "STOLga o'xshab qolibdi" deb ko'rinadi.
+ilova "Ordega o'xshab qolibdi" deb ko'rinadi.

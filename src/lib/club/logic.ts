@@ -54,27 +54,39 @@ export type Bill = {
 
 export type ThemeMode = "auto" | "light" | "dark";
 
+export const FREE_TABLE_LIMIT = 3;
+export const MAX_TABLES = 30;
+
 export type Settings = {
   clubName: string;
   rate: number;
   vipRate: number;
-  tableCount: 6 | 8 | 9;
+  tableCount: number;
   vipTables: number[];
   roundUp: 1 | 15;
   theme: ThemeMode;
+  premium: boolean;
+  setupDone: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   clubName: "Bilyard klub",
   rate: 60000,
   vipRate: 120000,
-  tableCount: 9,
-  vipTables: [8, 9],
+  tableCount: FREE_TABLE_LIMIT,
+  vipTables: [],
   roundUp: 1,
   theme: "auto",
+  premium: false,
+  setupDone: false,
 };
 
-export const DEFAULT_MENU: MenuItem[] = [
+export function tableLimit(settings: Pick<Settings, "premium">) {
+  return settings.premium ? MAX_TABLES : FREE_TABLE_LIMIT;
+}
+
+// Offered once during club setup ("Namuna menyu"); a new club starts with an empty menu.
+export const SAMPLE_MENU: MenuItem[] = [
   { id: "suv", name: "Suv", price: 5000, category: "ichimlik" },
   { id: "cola", name: "Cola", price: 12000, category: "ichimlik" },
   { id: "fanta", name: "Fanta", price: 12000, category: "ichimlik" },
@@ -89,6 +101,13 @@ export const DEFAULT_MENU: MenuItem[] = [
   { id: "pista", name: "Pista", price: 30000, category: "gazak" },
   { id: "shokolad", name: "Shokolad", price: 10000, category: "gazak" },
   { id: "yongoq", name: "Yong'oq", price: 20000, category: "gazak" },
+];
+
+export const MENU_CATEGORIES: { id: MenuCategory; label: string }[] = [
+  { id: "ichimlik", label: "Ichimlik" },
+  { id: "issiq", label: "Issiq" },
+  { id: "pivo", label: "Pivo" },
+  { id: "gazak", label: "Gazak" },
 ];
 
 export const CATEGORIES: { id: MenuCategory | "all"; label: string }[] = [

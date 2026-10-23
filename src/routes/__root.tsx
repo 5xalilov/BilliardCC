@@ -4,7 +4,7 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { THEME_BOOT_SCRIPT, THEME_COLORS } from "@/components/club/theme";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Stol";
+const APP_NAME = "Orde";
 
 export const Route = createRootRoute({
   head: () => ({

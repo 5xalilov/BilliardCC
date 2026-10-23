@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* STOL brand palette — "Tun" (night) is the default; "Kun" (day) below.
+/* Orde brand palette — "Tun" (night) is the default; "Kun" (day) below.
    Stol Orange #ff7d0a is identical in both modes and always carries dark text.
-   Brand book: docs/brand/STOL.md · contrast audit: docs/brand/stol-palette.json */
+   Brand book: docs/brand/ORDE.md · contrast audit: docs/brand/stol-palette.json */
 @theme {
   --color-bg: #000000;
   --color-sheet: #171514;
@@ -19,8 +19,16 @@
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
 }
 
+:root {
+  /* Keys stand off the background: a hairline edge plus a soft drop shadow. */
+  --key-edge: rgb(255 255 255 / 0.1);
+  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 6px rgb(0 0 0 / 0.55);
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
+  --key-edge: rgb(21 19 17 / 0.12);
+  --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
   --color-bg: #f7f6f4;
   --color-sheet: #ffffff;
   --color-key: #e1dcd4;
@@ -36,6 +44,8 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
+    --key-edge: rgb(21 19 17 / 0.12);
+    --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
     --color-bg: #f7f6f4;
     --color-sheet: #ffffff;
     --color-key: #e1dcd4;
@@ -81,9 +91,18 @@
     scale 150ms ease-out,
     filter 150ms ease-out,
     background-color 150ms ease-out,
-    color 150ms ease-out;
+    color 150ms ease-out,
+    box-shadow 150ms ease-out;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Filled keys only — text-only toggles stay flat. --key-ring carries live/paused state. */
+.key[class*="bg-"] {
+  box-shadow:
+    var(--key-ring, 0 0 #0000),
+    inset 0 0 0 1px var(--key-edge),
+    var(--key-shadow);
 }
 
 .key:hover:not(:disabled) {
@@ -94,17 +113,46 @@
   scale: 0.96;
 }
 
+.key:active:not(:disabled)[class*="bg-"] {
+  box-shadow:
+    var(--key-ring, 0 0 #0000),
+    inset 0 0 0 1px var(--key-edge);
+}
+
 .key:disabled {
   opacity: 0.28;
   filter: none;
 }
 
 .key-live {
-  box-shadow: inset 0 0 0 2px var(--color-live);
+  --key-ring: inset 0 0 0 2px var(--color-live);
 }
 
 .key-paused {
-  box-shadow: inset 0 0 0 2px var(--color-muted);
+  --key-ring: inset 0 0 0 2px var(--color-muted);
+}
+
+/* Mode-specific artwork: show the Tun or Kun variant, following the same rules as the tokens. */
+.only-kun {
+  display: none;
+}
+
+:root[data-theme="light"] .only-tun {
+  display: none;
+}
+
+:root[data-theme="light"] .only-kun {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .only-tun {
+    display: none;
+  }
+
+  :root:not([data-theme]) .only-kun {
+    display: block;
+  }
 }
 
 .display-num {

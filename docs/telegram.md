@@ -1,8 +1,15 @@
-# STOL — Telegram'ga joylash (Telegram Serverless / tgcloud)
+# Orde — Telegram'ga joylash (Telegram Serverless / tgcloud)
 
 Ilova Telegram Mini App sifatida `https://app8805316759.tgcloud.ai/` manzilida
-ochiladi. Bot `/start` yoki istalgan xabarga "🎱 Stolni ochish" tugmasi bilan
-javob beradi va chatning menyu tugmasini ham shu ilovaga bog'laydi.
+ochiladi. Bot doimiy tugmalar bilan ishlaydi: **🎱 Kassani ochish**, **⭐ Premium**,
+**❓ Yordam**. `/start` chatning menyu tugmasini ham ilovaga bog'laydi.
+
+## Admin (platforma egasi)
+
+1. Botga `/myid` yozing — u Telegram ID'ingizni qaytaradi.
+2. ID'ni `tgcloud/lib/app.js` dagi `ADMIN_IDS` ro'yxatiga qo'shing va push qiling.
+3. Shundan keyin premium so'rovlari sizga keladi. `/botsetup` buyrug'i esa bot
+   tavsifi va buyruqlarini `tgcloud/lib/texts.js` dan o'rnatadi.
 
 ## Tuzilma
 
@@ -11,8 +18,9 @@ javob beradi va chatning menyu tugmasini ham shu ilovaga bog'laydi.
 | `mini-app/` | Mini App kirish nuqtasi (`index.html`, `main.tsx`) — `src/components/club` ni ishlatadi |
 | `vite.miniapp.config.ts` | Statik build → `dist-miniapp/` |
 | `tgcloud.jsonc` | `"static": { "source": "dist-miniapp", "spa": true }` |
-| `tgcloud/handlers/message.js` | Bot: xabarga Mini App tugmasi bilan javob |
-| `tgcloud/lib/app.js` | Mini App manzili |
+| `tgcloud/handlers/message.js` | Bot: tugmali menyu, premium so'rovi, yordam, `/myid`, `/botsetup` |
+| `tgcloud/lib/app.js` | Mini App manzili, tugmalar, `ADMIN_IDS` |
+| `tgcloud/lib/texts.js` | Bot matnlari va BotFather tavsiflari |
 | `.tgcloud/` | CLI holati va token — **git'ga kirmaydi** |
 
 ## Joylash — GitHub Actions orqali (tavsiya)

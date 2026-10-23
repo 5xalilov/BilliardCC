@@ -1,11 +1,13 @@
 import { useEffect, type ReactNode } from "react";
-import { Delete, History, SlidersHorizontal } from "lucide-react";
+import { Delete, History, Plus, SlidersHorizontal } from "lucide-react";
 import { Toaster } from "sonner";
 import { NowProvider, useNow } from "@/components/club/now";
+import { Onboarding } from "@/components/club/onboarding";
 import { SheetHost } from "@/components/club/sheets";
 import { useResolvedTheme } from "@/components/club/theme";
 import { cn } from "@/lib/cn";
 import {
+  FREE_TABLE_LIMIT,
   displayBucket,
   elapsedMs,
   formatClock,
@@ -17,10 +19,17 @@ import { useClub } from "@/lib/club/store";
 
 export function ClubApp() {
   const theme = useResolvedTheme();
+  const setupDone = useClub((s) => s.settings.setupDone);
   return (
     <NowProvider>
-      <ClubScreen />
-      <SheetHost />
+      {setupDone ? (
+        <>
+          <ClubScreen />
+          <SheetHost />
+        </>
+      ) : (
+        <Onboarding />
+      )}
       <Toaster
         theme={theme}
         position="top-center"
@@ -83,15 +92,15 @@ function ClubScreen() {
     0,
   );
 
-  let label = "STOL TANLANG";
-  let amount = "0";
-  let hint = "Raqam — stolni boshlash · 0 — tashqi";
-  let extra = "";
+  // Only data on the display — how the keys work is taught once, in onboarding.
+  let label = "OCHIQ HISOB";
+  let amount = formatSom(openTotal);
+  let hint = sessions.length > 0 ? `${sessions.length} ta ochiq` : "";
 
   if (typing && focused) {
     label = `QO'SHIMCHA · ${sessionLabel(focused, walkins).toUpperCase()}`;
     amount = formatSom(Number(entry.buffer));
-    hint = "HISOB — tasdiqlash · AC — bekor";
+    hint = "";
   } else if (focused) {
     const q = quote(focused, now, settings.roundUp);
     label = sessionLabel(focused, walkins).toUpperCase();
@@ -99,16 +108,11 @@ function ClubScreen() {
     if (focused.pauseStartedAt) label += " · PAUZA";
     amount = formatSom(q.total);
     if (focused.kind === "walkin") {
-      hint = `Bar ${formatSom(q.bar)} · vaqt hisobi yo'q`;
+      hint = `bar ${formatSom(q.bar)}`;
     } else {
       hint = `${formatClock(q.elapsed)} · vaqt ${formatSom(q.time)} · bar ${formatSom(q.bar)}`;
     }
     if (focused.discountPct) hint += ` · −${focused.discountPct}%`;
-    extra = "Yopish — shu tugmani yana bosing";
-  } else if (sessions.length > 0) {
-    label = "OCHIQ HISOB";
-    amount = formatSom(openTotal);
-    hint = `${sessions.length} ta ochiq · raqam yangi stol ochadi`;
   }
 
   const barQty = focused?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0;
@@ -156,8 +160,7 @@ function ClubScreen() {
         <span className="display-num text-fg" data-len={displayBucket(amount)}>
           {amount}
         </span>
-        <span className="mt-3 block min-h-10 text-sm text-muted">{hint}</span>
-        <span className="block min-h-5 text-sm text-op-ink">{extra}</span>
+        <span className="mt-3 block min-h-5 text-sm text-muted">{hint}</span>
       </button>
 
       <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label="Boshqaruv">
@@ -184,9 +187,9 @@ function ClubScreen() {
           onClick={() => useClub.getState().pressBar()}
         />
 
-        {[7, 8, 9].map((n) => (
-          <TableKey key={n} n={n} typing={typing} now={now} />
-        ))}
+        <div className="relative col-span-3 row-span-3">
+          {typing ? <DigitBlock /> : <TableGrid now={now} />}
+        </div>
         <Key
           kind="word"
           tone="op"
@@ -196,10 +199,6 @@ function ClubScreen() {
           ariaLabel={paused ? "Davom ettirish" : "Pauza"}
           onClick={() => useClub.getState().pressPause()}
         />
-
-        {[4, 5, 6].map((n) => (
-          <TableKey key={n} n={n} typing={typing} now={now} />
-        ))}
         <Key
           kind="word"
           tone="op"
@@ -208,10 +207,6 @@ function ClubScreen() {
           ariaLabel="Ayirish"
           onClick={() => useClub.getState().pressRemove()}
         />
-
-        {[1, 2, 3].map((n) => (
-          <TableKey key={n} n={n} typing={typing} now={now} />
-        ))}
         <Key
           kind="word"
           tone="op"
@@ -253,20 +248,67 @@ function ClubScreen() {
   );
 }
 
-function TableKey({ n, typing, now }: { n: number; typing: boolean; now: number }) {
-  const sessions = useClub((s) => s.sessions);
-  const focusId = useClub((s) => s.focusId);
+const DIGIT_ROWS = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+
+function DigitBlock() {
+  return (
+    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-3">
+      {DIGIT_ROWS.map((n) => (
+        <Key
+          key={n}
+          kind="digit"
+          tone="num"
+          label={String(n)}
+          ariaLabel={String(n)}
+          onClick={() => useClub.getState().pressDigit(String(n))}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Up to 9 tables keep full-size keys; bigger clubs get 4–5 columns and the block scrolls.
+function gridColumns(count: number) {
+  if (count <= 9) return 3;
+  if (count <= 16) return 4;
+  return 5;
+}
+
+function TableGrid({ now }: { now: number }) {
   const tableCount = useClub((s) => s.settings.tableCount);
-  const session = sessions.find((s) => s.kind === "table" && s.table === n);
-  const focused = session?.id === focusId;
-  const enabled = typing || n <= tableCount;
+  const atFreeLimit = useClub((s) => !s.settings.premium && s.settings.tableCount >= FREE_TABLE_LIMIT);
+  const cols = gridColumns(tableCount);
+  const compact = cols > 3;
+  return (
+    <div className="no-scrollbar absolute inset-0 overflow-y-auto">
+      <div
+        className={cn("grid", compact ? "gap-2" : "gap-3")}
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
+          {Array.from({ length: tableCount }, (_, i) => (
+            <TableKey key={i + 1} n={i + 1} now={now} compact={compact} />
+          ))}
+          {atFreeLimit ? (
+            <button
+              type="button"
+              aria-label="Stol qo'shish"
+              onClick={() => useClub.getState().pushSheet({ kind: "premium" })}
+              className="key flex aspect-square items-center justify-center rounded-full border-2 border-dashed border-line text-muted"
+            >
+              <Plus className="size-7" strokeWidth={1.5} />
+            </button>
+          ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TableKey({ n, now, compact }: { n: number; now: number; compact: boolean }) {
+  const session = useClub((s) => s.sessions.find((x) => x.kind === "table" && x.table === n));
+  const focusId = useClub((s) => s.focusId);
+  const focused = Boolean(session) && session?.id === focusId;
   const paused = Boolean(session?.pauseStartedAt);
-  const sub =
-    !typing && session
-      ? paused
-        ? "pauza"
-        : formatClock(elapsedMs(session, now))
-      : undefined;
+  const sub = session ? (paused ? "pauza" : formatClock(elapsedMs(session, now))) : undefined;
 
   return (
     <Key
@@ -274,10 +316,10 @@ function TableKey({ n, typing, now }: { n: number; typing: boolean; now: number 
       tone="num"
       label={String(n)}
       sub={sub}
-      active={!typing && focused}
-      live={!typing && Boolean(session) && !focused && !paused}
-      paused={!typing && paused && !focused}
-      disabled={!enabled}
+      compact={compact}
+      active={focused}
+      live={Boolean(session) && !focused && !paused}
+      paused={paused && !focused}
       ariaLabel={`Stol ${n}`}
       onClick={() => useClub.getState().pressTable(n)}
     />
@@ -291,7 +333,8 @@ function toneClass(tone: "num" | "fn" | "op", active: boolean) {
   return "bg-key text-fg";
 }
 
-function labelClass(kind: "digit" | "word" | "symbol", hasSub: boolean) {
+function labelClass(kind: "digit" | "word" | "symbol", hasSub: boolean, compact: boolean) {
+  if (kind === "digit" && compact) return hasSub ? "text-xl font-normal" : "text-2xl font-normal";
   if (kind === "digit") return hasSub ? "text-3xl font-normal" : "text-4xl font-normal";
   if (kind === "symbol") return "text-3xl font-normal";
   return "text-sm font-semibold tracking-wide";
@@ -307,6 +350,7 @@ function Key({
   live,
   paused,
   badge,
+  compact = false,
   ariaLabel,
   onClick,
   children,
@@ -320,6 +364,7 @@ function Key({
   live?: boolean;
   paused?: boolean;
   badge?: number;
+  compact?: boolean;
   ariaLabel: string;
   onClick: () => void;
   children?: ReactNode;
@@ -347,11 +392,12 @@ function Key({
       ) : null}
       {children ?? (
         <span className="flex flex-col items-center px-1">
-          <span className={cn(labelClass(kind, Boolean(sub)), "leading-none")}>{label}</span>
+          <span className={cn(labelClass(kind, Boolean(sub), compact), "leading-none")}>{label}</span>
           {sub ? (
             <span
               className={cn(
-                "mt-1 text-xs font-medium leading-none tabular-nums",
+                "mt-1 font-medium leading-none tabular-nums",
+                compact ? "text-[10px]" : "text-xs",
                 active ? "text-bg/70" : live ? "text-live" : paused ? "text-op-ink" : "text-muted",
               )}
             >

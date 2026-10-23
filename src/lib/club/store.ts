@@ -2,11 +2,13 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  DEFAULT_MENU,
   DEFAULT_SETTINGS,
+  MAX_TABLES,
+  SAMPLE_MENU,
   formatSom,
   quote,
   sessionLabel,
+  tableLimit,
   uid,
   type Bill,
   type LineItem,
@@ -28,7 +30,9 @@ export type Sheet =
   | { id: string; kind: "menu" }
   | { id: string; kind: "help" }
   | { id: string; kind: "transfer"; sessionId: string }
-  | { id: string; kind: "walkins" };
+  | { id: string; kind: "walkins" }
+  | { id: string; kind: "premium" }
+  | { id: string; kind: "product"; itemId: string | null };
 
 export type SheetInput =
   | { kind: "bar" }
@@ -43,7 +47,13 @@ export type SheetInput =
   | { kind: "menu" }
   | { kind: "help" }
   | { kind: "transfer"; sessionId: string }
-  | { kind: "walkins" };
+  | { kind: "walkins" }
+  | { kind: "premium" }
+  | { kind: "product"; itemId: string | null };
+
+export type SetupInput = Pick<Settings, "clubName" | "tableCount" | "rate" | "vipRate"> & {
+  sampleMenu: boolean;
+};
 
 type Undo = { type: "delete"; id: string } | { type: "restore"; session: Session };
 
@@ -83,9 +93,11 @@ type State = {
   closeBill: (sessionId: string, cash: number, card: number) => void;
   voidBill: (sessionId: string) => void;
   patchSettings: (partial: Partial<Settings>) => void;
-  setTableCount: (count: 6 | 8 | 9) => void;
+  setTableCount: (count: number) => void;
+  completeSetup: (input: SetupInput) => void;
+  saveMenuItem: (item: Omit<MenuItem, "id"> & { id?: string }) => void;
+  removeMenuItem: (id: string) => void;
   toggleVipTable: (table: number) => void;
-  setMenuPrice: (id: string, price: number) => void;
   setClubName: (name: string) => void;
 };
 
@@ -208,7 +220,7 @@ export const useClub = create<State>()(
 
       return {
         settings: DEFAULT_SETTINGS,
-        menu: DEFAULT_MENU,
+        menu: [],
         sessions: [],
         bills: [],
         walkinSeq: 0,
@@ -585,21 +597,53 @@ export const useClub = create<State>()(
           set((st) => ({ settings: { ...st.settings, ...partial } })),
 
         setTableCount: (count) => {
-          const blocking = get().sessions.some(
-            (s) => s.kind === "table" && s.table !== null && s.table > count,
+          const st = get();
+          const next = Math.max(1, Math.min(MAX_TABLES, Math.round(count)));
+          if (next > tableLimit(st.settings)) {
+            get().pushSheet({ kind: "premium" });
+            return;
+          }
+          const blocking = st.sessions.some(
+            (s) => s.kind === "table" && s.table !== null && s.table > next,
           );
           if (blocking) {
             toast("Avval yuqori raqamli stolni yoping");
             return;
           }
+          set({
+            settings: {
+              ...st.settings,
+              tableCount: next,
+              vipTables: st.settings.vipTables.filter((n) => n <= next),
+            },
+          });
+        },
+
+        completeSetup: ({ clubName, tableCount, rate, vipRate, sampleMenu }) =>
           set((st) => ({
             settings: {
               ...st.settings,
-              tableCount: count,
-              vipTables: st.settings.vipTables.filter((n) => n <= count),
+              clubName: clubName.trim() || DEFAULT_SETTINGS.clubName,
+              tableCount: Math.max(1, Math.min(tableLimit(st.settings), Math.round(tableCount))),
+              rate: Math.max(0, Math.round(rate)),
+              vipRate: Math.max(0, Math.round(vipRate)),
+              setupDone: true,
             },
-          }));
-        },
+            menu: sampleMenu ? SAMPLE_MENU.map((item) => ({ ...item, id: uid() })) : st.menu,
+          })),
+
+        saveMenuItem: ({ id, name, price, category }) =>
+          set((st) => {
+            const clean = { name: name.trim(), price: Math.max(0, Math.round(price)), category };
+            if (!clean.name) return {};
+            return {
+              menu: id
+                ? st.menu.map((item) => (item.id === id ? { ...item, ...clean } : item))
+                : [...st.menu, { id: uid(), ...clean }],
+            };
+          }),
+
+        removeMenuItem: (id) => set((st) => ({ menu: st.menu.filter((item) => item.id !== id) })),
 
         toggleVipTable: (table) =>
           set((st) => {
@@ -614,13 +658,6 @@ export const useClub = create<State>()(
             };
           }),
 
-        setMenuPrice: (id, price) =>
-          set((st) => ({
-            menu: st.menu.map((item) =>
-              item.id === id ? { ...item, price: Math.max(0, Math.round(price)) } : item,
-            ),
-          })),
-
         setClubName: (name) =>
           set((st) => ({
             settings: { ...st.settings, clubName: name.trim() || "Bilyard klub" },
@@ -629,7 +666,15 @@ export const useClub = create<State>()(
     },
     {
       name: "stol-club-v1",
-      version: 1,
+      version: 2,
+      // v1 had no setup step and a fixed 9-table keypad: those clubs are already set up.
+      migrate: (persisted, version) => {
+        const saved = (persisted ?? {}) as Partial<State>;
+        if (version < 2 && saved.settings) {
+          saved.settings = { ...saved.settings, setupDone: true };
+        }
+        return saved as State;
+      },
       partialize: (state) => ({
         settings: state.settings,
         menu: state.menu,

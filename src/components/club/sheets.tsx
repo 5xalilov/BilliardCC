@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Minus, Moon, Plus, Sun, SunMoon } from "lucide-react";
+import { ChevronLeft, Crown, Minus, Moon, Plus, Sun, SunMoon, Trash2 } from "lucide-react";
 import { useNow } from "@/components/club/now";
 import { cn } from "@/lib/cn";
 import {
   CATEGORIES,
+  FREE_TABLE_LIMIT,
+  MAX_TABLES,
+  MENU_CATEGORIES,
   formatClock,
   formatSom,
   formatWhen,
@@ -16,6 +19,8 @@ import {
   type Session,
   type ThemeMode,
 } from "@/lib/club/logic";
+import { OrdeWordmark } from "@/components/club/logo";
+import { GUIDE } from "@/lib/club/guide";
 import { useClub, type Sheet } from "@/lib/club/store";
 
 export function SheetHost() {
@@ -114,13 +119,17 @@ function sheetTitle(sheet: Sheet, sessions: Session[]) {
     case "settings":
       return { title: "Klub", sub: "" };
     case "menu":
-      return { title: "Menyu", sub: "Ochiq hisobga ta'sir qilmaydi" };
+      return { title: "Menyu", sub: "" };
     case "help":
       return { title: "Qanday ishlaydi", sub: "" };
     case "transfer":
       return { title: "Ko'chirish", sub: place };
     case "walkins":
       return { title: "Tashqi", sub: "Stolsiz mijozlar" };
+    case "premium":
+      return { title: "Premium", sub: "" };
+    case "product":
+      return { title: sheet.itemId ? "Mahsulot" : "Yangi mahsulot", sub: "" };
     default:
       return { title: "", sub: "" };
   }
@@ -184,6 +193,10 @@ function SheetBody({ sheet }: { sheet: Sheet }) {
       return <TransferSheet sessionId={sheet.sessionId} />;
     case "walkins":
       return <WalkinSheet />;
+    case "premium":
+      return <PremiumSheet />;
+    case "product":
+      return <ProductSheet itemId={sheet.itemId} />;
     default: {
       const neverSheet: never = sheet;
       return neverSheet;
@@ -257,9 +270,20 @@ function BarSheet() {
       </div>
 
       {sessions.length === 0 ? (
-        <p className="px-4 pb-4 text-sm text-muted">
-          Avval stol raqamini bosing yoki tashqi mijoz oching. Buyurtma shu joyga yoziladi.
-        </p>
+        <p className="px-4 pb-4 text-sm text-muted">Avval stol yoki tashqi oching.</p>
+      ) : null}
+
+      {menu.length === 0 ? (
+        <div className="px-4 pb-4">
+          <button
+            type="button"
+            className="key flex h-12 w-full items-center justify-center gap-2 rounded-full bg-op text-base font-semibold text-on-op"
+            onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: null })}
+          >
+            <Plus className="size-5" />
+            Mahsulot qo'shish
+          </button>
+        </div>
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 px-4 pb-4">
@@ -732,23 +756,18 @@ function SettingsSheet() {
         </div>
       </div>
       <div className="rounded-3xl bg-elev px-4 py-4">
-        <p className="text-sm text-muted">Stollar</p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {([6, 8, 9] as const).map((count) => (
-            <button
-              key={count}
-              type="button"
-              className={cn(
-                "key rounded-full py-2 text-sm",
-                settings.tableCount === count ? "bg-op text-on-op" : "bg-fn text-fg",
-              )}
-              onClick={() => useClub.getState().setTableCount(count)}
-            >
-              {count}
-            </button>
-          ))}
-        </div>
-        <p className="mt-4 text-sm text-muted">VIP stollar — yangi hisob VIP narxda ochiladi</p>
+        <Stepper
+          label="Stollar"
+          value={settings.tableCount}
+          min={1}
+          max={MAX_TABLES}
+          step={1}
+          onChange={(count) => useClub.getState().setTableCount(count)}
+        />
+        {!settings.premium ? (
+          <p className="mt-2 text-sm text-muted">Bepul: {FREE_TABLE_LIMIT} tagacha stol</p>
+        ) : null}
+        <p className="mt-4 text-sm text-muted">VIP stollar</p>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {Array.from({ length: settings.tableCount }, (_, i) => i + 1).map((n) => {
             const on = settings.vipTables.includes(n);
@@ -772,9 +791,20 @@ function SettingsSheet() {
       <button
         type="button"
         className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
+        onClick={() => useClub.getState().pushSheet({ kind: "premium" })}
+      >
+        <span className="flex items-center gap-2">
+          <Crown className="size-4 text-op-ink" />
+          {settings.premium ? "Premium faol" : "Premium"}
+        </span>
+        <ChevronLeft className="size-4 rotate-180" />
+      </button>
+      <button
+        type="button"
+        className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
         onClick={() => useClub.getState().pushSheet({ kind: "menu" })}
       >
-        Menyu narxlari
+        Menyu
         <ChevronLeft className="size-4 rotate-180" />
       </button>
       <button
@@ -785,22 +815,21 @@ function SettingsSheet() {
         Qanday ishlaydi
         <ChevronLeft className="size-4 rotate-180" />
       </button>
-      <StolMark />
+      <BrandFooter />
     </div>
   );
 }
 
-function StolMark() {
+function BrandFooter() {
   return (
     <div className="flex flex-col items-center gap-2 pt-4 pb-1">
-      <span className="text-2xl font-bold tracking-[0.18em] text-fg">STOL</span>
-      <span className="h-1 w-14 rounded-full bg-op" />
+      <OrdeWordmark className="h-7 text-fg" />
       <span className="text-xs text-muted">Bilyard klub kassasi</span>
     </div>
   );
 }
 
-function Stepper({
+export function Stepper({
   label,
   value,
   min,
@@ -844,53 +873,173 @@ function Stepper({
 function MenuSheet() {
   const menu = useClub((s) => s.menu);
   return (
-    <div className="pad-safe px-4 pb-4">
-      <ul className="divide-y divide-line">
-        {menu.map((item) => (
-          <li key={item.id} className="flex items-center justify-between gap-3 py-3">
-            <span>
-              <span className="block text-base">{item.name}</span>
-              <span className="text-sm tabular-nums text-muted">{formatSom(item.price)}</span>
-            </span>
-            <span className="flex items-center gap-2">
+    <div className="pad-safe space-y-3 px-4 pb-5">
+      <button
+        type="button"
+        className="key flex h-12 w-full items-center justify-center gap-2 rounded-full bg-op text-base font-semibold text-on-op"
+        onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: null })}
+      >
+        <Plus className="size-5" />
+        Mahsulot qo'shish
+      </button>
+      {menu.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted">Menyu bo'sh</p>
+      ) : (
+        <ul className="overflow-hidden rounded-3xl bg-elev">
+          {menu.map((item) => (
+            <li key={item.id} className="border-b border-line last:border-b-0">
               <button
                 type="button"
-                className="key flex size-10 items-center justify-center rounded-full bg-elev text-fg"
-                aria-label={`${item.name} narxini kamaytirish`}
-                onClick={() => useClub.getState().setMenuPrice(item.id, item.price - 1000)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: item.id })}
               >
-                <Minus className="size-4" />
+                <span className="min-w-0">
+                  <span className="block truncate text-base">{item.name}</span>
+                  <span className="text-sm text-muted">
+                    {MENU_CATEGORIES.find((c) => c.id === item.category)?.label}
+                  </span>
+                </span>
+                <span className="shrink-0 text-base tabular-nums">{formatSom(item.price)}</span>
               </button>
-              <button
-                type="button"
-                className="key flex size-10 items-center justify-center rounded-full bg-elev text-fg"
-                aria-label={`${item.name} narxini oshirish`}
-                onClick={() => useClub.getState().setMenuPrice(item.id, item.price + 1000)}
-              >
-                <Plus className="size-4" />
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-const HELP = [
-  ["1–9", "Bo'sh stol ochiladi, vaqt yura boshlaydi."],
-  ["Yana", "Ishlayotgan stolni bossangiz hisob ochiladi — naqd, karta yoki aralash."],
-  ["0", "Tashqi mijoz. Vaqt yozilmaydi, faqat bar."],
-  ["BAR", "Ichimlikni ochiq stolga yoki yangi tashqiga biriktirish."],
-  ["%", "Chegirma. QO'SH — qo'shimcha summa. AYIR — oxirgi buyurtma."],
-  ["PAUZA", "Vaqtni to'xtatadi. VIP — narxni almashtiradi. KO'CH — boshqa stol."],
-  ["AC", "Ko'rinishni tozalaydi. Ochiq hisoblar o'chmaydi."],
-];
+function ProductSheet({ itemId }: { itemId: string | null }) {
+  const existing = useClub((s) => (itemId ? s.menu.find((item) => item.id === itemId) ?? null : null));
+  const [name, setName] = useState(existing?.name ?? "");
+  const [price, setPrice] = useState(existing ? String(existing.price) : "");
+  const [category, setCategory] = useState<MenuCategory>(existing?.category ?? "ichimlik");
+  const amount = Number(price.replace(/\D/g, "")) || 0;
+  const valid = name.trim().length > 0 && amount > 0;
+
+  const save = () => {
+    if (!valid) return;
+    useClub.getState().saveMenuItem({ id: existing?.id, name, price: amount, category });
+    useClub.getState().popSheet();
+  };
+
+  return (
+    <div className="pad-safe space-y-4 px-4 pb-5">
+      <div className="overflow-hidden rounded-3xl bg-elev">
+        <label className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+          <span className="text-sm text-muted">Nomi</span>
+          <input
+            value={name}
+            maxLength={40}
+            autoFocus={!existing}
+            aria-label="Mahsulot nomi"
+            placeholder="Cola"
+            onChange={(event) => setName(event.target.value)}
+            className="min-w-0 flex-1 bg-transparent text-right text-base text-fg outline-none placeholder:text-muted/60"
+          />
+        </label>
+        <label className="flex items-center justify-between gap-3 px-4 py-3">
+          <span className="text-sm text-muted">Narxi</span>
+          <input
+            value={price ? formatSom(amount) : ""}
+            inputMode="numeric"
+            aria-label="Narxi"
+            placeholder="12 000"
+            onChange={(event) => setPrice(event.target.value.replace(/\D/g, "").slice(0, 9))}
+            className="min-w-0 flex-1 bg-transparent text-right text-base tabular-nums text-fg outline-none placeholder:text-muted/60"
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {MENU_CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            aria-pressed={category === c.id}
+            className={cn(
+              "key rounded-full py-2 text-sm",
+              category === c.id ? "bg-op text-on-op" : "bg-fn text-fg",
+            )}
+            onClick={() => setCategory(c.id)}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        disabled={!valid}
+        className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
+        onClick={save}
+      >
+        Saqlash
+      </button>
+      {existing ? (
+        <button
+          type="button"
+          className="key flex h-12 w-full items-center justify-center gap-2 rounded-full bg-elev text-base text-fg"
+          onClick={() => {
+            useClub.getState().removeMenuItem(existing.id);
+            useClub.getState().popSheet();
+          }}
+        >
+          <Trash2 className="size-4" />
+          O'chirish
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+const PREMIUM_PERKS = [
+  [`${MAX_TABLES} tagacha stol`, `Bepul tarifda ${FREE_TABLE_LIMIT} ta stol.`],
+  ["VIP stollar va narxlar", "Har bir stol uchun alohida narx."],
+] as const;
+
+function PremiumSheet() {
+  const premium = useClub((s) => s.settings.premium);
+  const tg = typeof window !== "undefined" ? telegramWebApp() : null;
+  return (
+    <div className="pad-safe space-y-3 px-4 pb-5">
+      <div className="flex flex-col items-center gap-2 py-2 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-op text-on-op">
+          <Crown className="size-7" strokeWidth={1.75} />
+        </span>
+        <p className="text-sm text-muted">{premium ? "Klubingizda Premium faol" : "Katta klublar uchun"}</p>
+      </div>
+      {PREMIUM_PERKS.map(([title, body]) => (
+        <div key={title} className="rounded-3xl bg-elev px-4 py-3">
+          <p className="text-base font-semibold">{title}</p>
+          <p className="mt-1 text-sm text-muted">{body}</p>
+        </div>
+      ))}
+      {!premium ? (
+        tg ? (
+          <button
+            type="button"
+            className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
+            onClick={() => tg.close()}
+          >
+            Botda so'rash
+          </button>
+        ) : (
+          <p className="pt-2 text-center text-sm text-muted">Orde botida «⭐ Premium» tugmasini bosing.</p>
+        )
+      ) : null}
+    </div>
+  );
+}
+
+function telegramWebApp(): { close: () => void } | null {
+  const tg = (window as { Telegram?: { WebApp?: { close: () => void; initData?: string } } }).Telegram?.WebApp;
+  // The SDK script defines WebApp everywhere; initData is only set inside Telegram.
+  return tg && tg.initData ? tg : null;
+}
 
 function HelpSheet() {
   return (
     <div className="pad-safe space-y-3 px-4 pb-5">
-      {HELP.map(([title, body]) => (
+      {GUIDE.map(([title, body]) => (
         <div key={title} className="rounded-3xl bg-elev px-4 py-3">
           <p className="text-sm font-semibold text-op-ink">{title}</p>
           <p className="mt-1 text-sm text-pretty text-fg">{body}</p>
