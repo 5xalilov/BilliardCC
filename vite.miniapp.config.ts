@@ -7,7 +7,8 @@ import tailwindcss from "@tailwindcss/vite";
 // Output: dist-miniapp/ — named as "static.source" in tgcloud.jsonc.
 export default defineConfig({
   root: "mini-app",
-  publicDir: "../public",
+  // public/ holds web-only platform files (__grok/, og.jpg); the favicon is imported from index.html.
+  publicDir: false,
   base: "/",
   resolve: { tsconfigPaths: true },
   plugins: [tailwindcss(), viteReact()],
