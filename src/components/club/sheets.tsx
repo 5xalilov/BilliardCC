@@ -19,11 +19,16 @@ import {
   type MenuCategory,
   type Session,
   type ThemeMode,
+  type UnitConfig,
+  unitConfig,
+  unitKind,
 } from "@/lib/club/logic";
 import { OrdeWordmark } from "@/components/club/logo";
 import guideKun from "@/assets/onboarding/guide-kun.webp";
 import guideTun from "@/assets/onboarding/guide-tun.webp";
+import { BUSINESSES } from "@/lib/club/business";
 import { callCloud, cloudAvailable, type CloudClub } from "@/lib/club/cloud";
+import { useT } from "@/lib/i18n/use-t";
 import { GUIDE } from "@/lib/club/guide";
 import { useClub, type Sheet } from "@/lib/club/store";
 
@@ -134,6 +139,8 @@ function sheetTitle(sheet: Sheet, sessions: Session[]) {
       return { title: "Premium", sub: "" };
     case "admin":
       return { title: "Admin panel", sub: "Klublar va Premium" };
+    case "unit":
+      return { title: `#${sheet.n}`, sub: "" };
     case "product":
       return { title: sheet.itemId ? "Mahsulot" : "Yangi mahsulot", sub: "" };
     default:
@@ -203,6 +210,8 @@ function SheetBody({ sheet }: { sheet: Sheet }) {
       return <PremiumSheet />;
     case "admin":
       return <AdminSheet />;
+    case "unit":
+      return <UnitSheet n={sheet.n} />;
     case "product":
       return <ProductSheet itemId={sheet.itemId} />;
     default: {
@@ -1069,6 +1078,106 @@ function PremiumSheet() {
       ) : (
         <p className="pt-2 text-center text-sm text-muted">Orde botida «⭐ Premium» tugmasini bosing.</p>
       )}
+    </div>
+  );
+}
+
+// One unit's own settings: name, business type, rates, VIP. Unset fields follow the club.
+function UnitSheet({ n }: { n: number }) {
+  const t = useT();
+  const settings = useClub((s) => s.settings);
+  const unit = unitConfig(settings, n);
+  const kind = unitKind(settings, n);
+  const vip = settings.vipTables.includes(n);
+  const set = (patch: UnitConfig) => useClub.getState().setUnit(n, patch);
+  const custom = Object.keys(unit).length > 0;
+  const placeholder = `${t(`unit.${kind}`)} ${n}`;
+
+  return (
+    <div className="pad-safe space-y-4 px-4 pb-5">
+      <div className="overflow-hidden rounded-3xl bg-elev">
+        <label className="flex items-center justify-between gap-3 px-4 py-3">
+          <span className="text-sm text-muted">{t("unitSheet.name")}</span>
+          <input
+            value={unit.name ?? ""}
+            maxLength={24}
+            placeholder={placeholder}
+            aria-label={t("unitSheet.name")}
+            onChange={(event) => set({ name: event.target.value })}
+            className="min-w-0 flex-1 bg-transparent text-right text-base text-fg outline-none placeholder:text-muted/60"
+          />
+        </label>
+      </div>
+
+      <div>
+        <p className="px-1 pb-2 text-sm text-muted">{t("unitSheet.type")}</p>
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+          <button
+            type="button"
+            aria-pressed={!unit.kind}
+            onClick={() => set({ kind: undefined })}
+            className={cn("key shrink-0 rounded-full px-4 py-2 text-sm", !unit.kind ? "bg-op text-on-op" : "bg-fn text-fg")}
+          >
+            {t("unitSheet.clubType")}
+          </button>
+          {BUSINESSES.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              aria-pressed={unit.kind === b.id}
+              onClick={() => set({ kind: b.id })}
+              className={cn(
+                "key shrink-0 rounded-full px-4 py-2 text-sm",
+                unit.kind === b.id ? "bg-op text-on-op" : "bg-fn text-fg",
+              )}
+            >
+              {b.emoji} {t(`biz.${b.id}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-3xl bg-elev px-4 py-4">
+        <Stepper
+          label={t("unitSheet.rate") + (unit.rate !== undefined ? ` · ${t("unitSheet.custom")}` : "")}
+          value={unit.rate ?? settings.rate}
+          min={0}
+          max={2000000}
+          step={5000}
+          onChange={(rate) => set({ rate })}
+        />
+        <Stepper
+          label={t("unitSheet.vipRate") + (unit.vipRate !== undefined ? ` · ${t("unitSheet.custom")}` : "")}
+          value={unit.vipRate ?? settings.vipRate}
+          min={0}
+          max={2000000}
+          step={5000}
+          onChange={(vipRate) => set({ vipRate })}
+        />
+      </div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={vip}
+        onClick={() => useClub.getState().toggleVipTable(n)}
+        className="key flex w-full items-center justify-between rounded-3xl bg-elev px-4 py-4 text-left"
+      >
+        <span className="text-base">{t("unitSheet.vip")}</span>
+        <span className={cn("flex h-7 w-12 items-center rounded-full p-0.5", vip ? "bg-op" : "bg-fn")}>
+          <span className={cn("size-6 rounded-full shadow transition-transform", vip ? "translate-x-5 bg-on-op" : "bg-fg")} />
+        </span>
+      </button>
+
+      {custom ? (
+        <button
+          type="button"
+          className="key h-12 w-full rounded-full bg-elev text-base text-fg"
+          onClick={() => useClub.getState().setUnit(n, null)}
+        >
+          {t("unitSheet.reset")}
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   SAMPLE_MENU,
   activeTables,
   formatSom,
+  unitRate,
   quote,
   sessionLabel,
   tableLimit,
@@ -17,6 +18,7 @@ import {
   type MenuItem,
   type Session,
   type Settings,
+  type UnitConfig,
 } from "@/lib/club/logic";
 import type { SyncResult } from "@/lib/club/cloud";
 
@@ -36,6 +38,7 @@ export type Sheet =
   | { id: string; kind: "walkins" }
   | { id: string; kind: "premium" }
   | { id: string; kind: "admin" }
+  | { id: string; kind: "unit"; n: number }
   | { id: string; kind: "product"; itemId: string | null };
 
 export type SheetInput =
@@ -54,6 +57,7 @@ export type SheetInput =
   | { kind: "walkins" }
   | { kind: "premium" }
   | { kind: "admin" }
+  | { kind: "unit"; n: number }
   | { kind: "product"; itemId: string | null };
 
 export type SetupInput = Pick<Settings, "clubName" | "tableCount" | "rate" | "vipRate"> & {
@@ -105,6 +109,8 @@ type State = {
   saveMenuItem: (item: Omit<MenuItem, "id"> & { id?: string }) => void;
   removeMenuItem: (id: string) => void;
   applyCloud: (result: SyncResult) => void;
+  // Merge per-unit overrides; null (or an empty result) resets the unit to club defaults.
+  setUnit: (n: number, patch: UnitConfig | null) => void;
   markPremiumRequested: () => void;
   toggleVipTable: (table: number) => void;
   setClubName: (name: string) => void;
@@ -150,7 +156,7 @@ export const useClub = create<State>()(
           startedAt: Date.now(),
           pausedMs: 0,
           pauseStartedAt: null,
-          ratePerHour: vip ? settings.vipRate : settings.rate,
+          ratePerHour: unitRate(settings, n, vip),
           vip,
           items: [],
           discountPct: 0,
@@ -444,7 +450,13 @@ export const useClub = create<State>()(
             {
               ...session,
               vip,
-              ratePerHour: vip ? settings.vipRate : settings.rate,
+              // A walk-in has no unit: it uses the club rates.
+              ratePerHour:
+                session.kind === "table" && session.table !== null
+                  ? unitRate(settings, session.table, vip)
+                  : vip
+                    ? settings.vipRate
+                    : settings.rate,
             },
             session,
           );
@@ -590,7 +602,7 @@ export const useClub = create<State>()(
                   pausedMs: 0,
                   pauseStartedAt: null,
                   vip,
-                  ratePerHour: vip ? st.settings.vipRate : st.settings.rate,
+                  ratePerHour: unitRate(st.settings, table, vip),
                 }
               : { ...session, table };
           set({
@@ -665,6 +677,18 @@ export const useClub = create<State>()(
             settings: { ...st.settings, premium },
             cloud: { isAdmin, premiumRequested },
           })),
+
+        setUnit: (n, patch) =>
+          set((st) => {
+            const units = { ...st.settings.units };
+            const next = patch ? { ...units[String(n)], ...patch } : {};
+            for (const key of Object.keys(next) as (keyof UnitConfig)[]) {
+              if (next[key] === undefined || next[key] === "") delete next[key];
+            }
+            if (Object.keys(next).length) units[String(n)] = next;
+            else delete units[String(n)];
+            return { settings: { ...st.settings, units } };
+          }),
 
         markPremiumRequested: () =>
           set((st) => ({ cloud: { ...st.cloud, premiumRequested: true } })),
