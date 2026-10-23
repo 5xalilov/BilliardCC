@@ -6,17 +6,22 @@ import { cn } from "@/lib/cn";
 import { FREE_TABLE_LIMIT, MAX_TABLES, SAMPLE_MENU, tableLimit } from "@/lib/club/logic";
 import { GUIDE } from "@/lib/club/guide";
 import { useClub } from "@/lib/club/store";
+import guideKun from "@/assets/onboarding/guide-kun.webp";
+import guideTun from "@/assets/onboarding/guide-tun.webp";
+import setupKun from "@/assets/onboarding/setup-kun.webp";
+import setupTun from "@/assets/onboarding/setup-tun.webp";
+import welcomeKun from "@/assets/onboarding/welcome-kun.webp";
+import welcomeTun from "@/assets/onboarding/welcome-tun.webp";
 
 type Step = "welcome" | "guide" | "setup";
 const STEPS: Step[] = ["welcome", "guide", "setup"];
 
-// Optional artwork per step, one file per mode (public/onboarding/<step>-tun.webp / -kun.webp,
-// prompts in docs/brand/gemini-prompts.md). Leave null until the files exist —
-// the screens are complete without them.
+// Artwork per step, one image per mode (prompts in docs/brand/gemini-prompts.md).
+// Imported, not served from public/, so both the web and the Mini App builds bundle them.
 const ART: Record<Step, { tun: string; kun: string } | null> = {
-  welcome: null,
-  guide: null,
-  setup: null,
+  welcome: { tun: welcomeTun, kun: welcomeKun },
+  guide: { tun: guideTun, kun: guideKun },
+  setup: { tun: setupTun, kun: setupKun },
 };
 
 function telegramFirstName() {
@@ -64,14 +69,14 @@ export function Onboarding() {
   );
 }
 
-function Art({ step }: { step: Step }) {
+function Art({ step, className }: { step: Step; className?: string }) {
   const art = ART[step];
   if (!art) return null;
-  const cls = "mx-auto aspect-[4/3] w-full max-w-80 rounded-3xl object-cover";
+  const cls = cn("mx-auto aspect-[4/3] w-full rounded-3xl object-cover", className ?? "max-w-80");
   return (
     <>
-      <img src={art.tun} alt="" className={cn(cls, "only-tun")} />
-      <img src={art.kun} alt="" className={cn(cls, "only-kun")} />
+      <img src={art.tun} alt="" decoding="async" className={cn(cls, "only-tun")} />
+      <img src={art.kun} alt="" decoding="async" className={cn(cls, "only-kun")} />
     </>
   );
 }
@@ -95,8 +100,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
-        <Art step="welcome" />
-        <KeypadArt />
+        {ART.welcome ? <Art step="welcome" /> : <KeypadArt />}
         <div className="flex flex-col items-center gap-3">
           <OrdeWordmark className="h-12 text-fg" />
           <p className="text-base text-balance text-muted">
@@ -134,7 +138,7 @@ function Guide({ onNext }: { onNext: () => void }) {
   return (
     <>
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4">
-        <Art step="guide" />
+        <Art step="guide" className="mb-4 max-w-56" />
         <h1 className="px-1 pb-4 text-2xl font-semibold">Qanday ishlaydi</h1>
         <ul className="space-y-2">
           {GUIDE.map(([key, text]) => (
@@ -165,7 +169,7 @@ function Setup() {
   return (
     <>
       <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-2">
-        <Art step="setup" />
+        <Art step="setup" className="max-w-60" />
         <h1 className="px-1 text-2xl font-semibold">Klubingiz</h1>
         <div className="overflow-hidden rounded-3xl bg-elev">
           <label className="flex items-center justify-between gap-3 px-4 py-3">
