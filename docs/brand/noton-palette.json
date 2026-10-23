@@ -1,0 +1,141 @@
+{
+  "name": "Noton (Orde ilovasi uchun)",
+  "source": "noton.uz web/styles.css :root va :root[data-theme=dark] tokenlari, 2026-10-24",
+  "modes": {
+    "tun": {
+      "bg": "#15131b",
+      "sheet": "#1f1c27",
+      "key": "#2e2a3a",
+      "elev": "#332e40",
+      "fn": "#5a546a",
+      "line": "#3e384c",
+      "fg": "#eceaf2",
+      "muted": "#a29db2",
+      "op": "#0b7a57",
+      "on-op": "#ffffff",
+      "op-ink": "#4fc99a",
+      "live": "#4fc99a"
+    },
+    "kun": {
+      "bg": "#f4f2fa",
+      "sheet": "#ffffff",
+      "key": "#ddd7ea",
+      "elev": "#e5e0ef",
+      "fn": "#c5bbd9",
+      "line": "#d9d2e6",
+      "fg": "#202a2c",
+      "muted": "#5f6371",
+      "op": "#087f5b",
+      "on-op": "#ffffff",
+      "op-ink": "#066648",
+      "live": "#087f5b"
+    }
+  },
+  "pairs": [
+    [
+      "fg",
+      "bg",
+      "text"
+    ],
+    [
+      "fg",
+      "sheet",
+      "text"
+    ],
+    [
+      "fg",
+      "elev",
+      "text"
+    ],
+    [
+      "muted",
+      "bg",
+      "text"
+    ],
+    [
+      "muted",
+      "sheet",
+      "text"
+    ],
+    [
+      "muted",
+      "elev",
+      "text"
+    ],
+    [
+      "fg",
+      "key",
+      "large"
+    ],
+    [
+      "fg",
+      "fn",
+      "large"
+    ],
+    [
+      "on-op",
+      "op",
+      "text"
+    ],
+    [
+      "bg",
+      "fg",
+      "text"
+    ],
+    [
+      "op-ink",
+      "bg",
+      "text"
+    ],
+    [
+      "op-ink",
+      "sheet",
+      "text"
+    ],
+    [
+      "op-ink",
+      "elev",
+      "text"
+    ],
+    [
+      "live",
+      "key",
+      "ui"
+    ],
+    [
+      "muted",
+      "key",
+      "ui"
+    ],
+    [
+      "op",
+      "bg",
+      "sep"
+    ],
+    [
+      "key",
+      "bg",
+      "sep"
+    ],
+    [
+      "fn",
+      "key",
+      "sep"
+    ],
+    [
+      "fn",
+      "elev",
+      "sep"
+    ],
+    [
+      "elev",
+      "sheet",
+      "sep"
+    ],
+    [
+      "line",
+      "sheet",
+      "sep"
+    ]
+  ]
+}
