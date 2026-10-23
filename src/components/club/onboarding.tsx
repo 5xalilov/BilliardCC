@@ -4,23 +4,20 @@ import { OrdeWordmark } from "@/components/club/logo";
 import { Stepper } from "@/components/club/sheets";
 import { cn } from "@/lib/cn";
 import { FREE_TABLE_LIMIT, MAX_TABLES, SAMPLE_MENU, tableLimit } from "@/lib/club/logic";
-import { GUIDE } from "@/lib/club/guide";
 import { useClub } from "@/lib/club/store";
-import guideKun from "@/assets/onboarding/guide-kun.webp";
-import guideTun from "@/assets/onboarding/guide-tun.webp";
 import setupKun from "@/assets/onboarding/setup-kun.webp";
 import setupTun from "@/assets/onboarding/setup-tun.webp";
 import welcomeKun from "@/assets/onboarding/welcome-kun.webp";
 import welcomeTun from "@/assets/onboarding/welcome-tun.webp";
 
-type Step = "welcome" | "guide" | "setup";
-const STEPS: Step[] = ["welcome", "guide", "setup"];
+// How the keys work is taught afterwards, by the tour over the real keypad.
+type Step = "welcome" | "setup";
+const STEPS: Step[] = ["welcome", "setup"];
 
 // Artwork per step, one image per mode (prompts in docs/brand/gemini-prompts.md).
 // Imported, not served from public/, so both the web and the Mini App builds bundle them.
 const ART: Record<Step, { tun: string; kun: string } | null> = {
   welcome: { tun: welcomeTun, kun: welcomeKun },
-  guide: { tun: guideTun, kun: guideKun },
   setup: { tun: setupTun, kun: setupKun },
 };
 
@@ -62,8 +59,7 @@ export function Onboarding() {
         <span className="size-11" />
       </header>
 
-      {step === "welcome" ? <Welcome onNext={() => setStep("guide")} /> : null}
-      {step === "guide" ? <Guide onNext={() => setStep("setup")} /> : null}
+      {step === "welcome" ? <Welcome onNext={() => setStep("setup")} /> : null}
       {step === "setup" ? <Setup /> : null}
     </main>
   );
@@ -131,26 +127,6 @@ function KeypadArt() {
       {cell("bg-fg")}
       {cell("bg-op")}
     </div>
-  );
-}
-
-function Guide({ onNext }: { onNext: () => void }) {
-  return (
-    <>
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4">
-        <Art step="guide" className="mb-4 max-w-56" />
-        <h1 className="px-1 pb-4 text-2xl font-semibold">Qanday ishlaydi</h1>
-        <ul className="space-y-2">
-          {GUIDE.map(([key, text]) => (
-            <li key={key} className="flex items-center gap-3 rounded-3xl bg-elev px-4 py-3">
-              <span className="min-w-16 shrink-0 text-sm font-semibold text-op-ink">{key}</span>
-              <span className="text-sm text-pretty">{text}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <PrimaryButton onClick={onNext}>Tushunarli</PrimaryButton>
-    </>
   );
 }
 

@@ -33,6 +33,7 @@ export const TEXT = {
     'AC — ekranni tozalash, ochiq hisoblar saqlanadi.',
   premium:
     'Premium\n\n• 30 tagacha stol (bepul tarifda 3 ta)\n• VIP stollar va alohida narxlar',
+  premiumActive: 'Premium faol ✅',
   premiumSent: 'So\'rovingiz adminga yuborildi — tez orada bog\'lanamiz.',
   premiumClosed: 'Premium ulash tez orada ochiladi.',
 };

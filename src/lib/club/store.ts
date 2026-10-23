@@ -4,7 +4,9 @@ import { persist } from "zustand/middleware";
 import {
   DEFAULT_SETTINGS,
   MAX_TABLES,
+  FREE_TABLE_LIMIT,
   SAMPLE_MENU,
+  activeTables,
   formatSom,
   quote,
   sessionLabel,
@@ -16,6 +18,7 @@ import {
   type Session,
   type Settings,
 } from "@/lib/club/logic";
+import type { SyncResult } from "@/lib/club/cloud";
 
 export type Sheet =
   | { id: string; kind: "bar" }
@@ -32,6 +35,7 @@ export type Sheet =
   | { id: string; kind: "transfer"; sessionId: string }
   | { id: string; kind: "walkins" }
   | { id: string; kind: "premium" }
+  | { id: string; kind: "admin" }
   | { id: string; kind: "product"; itemId: string | null };
 
 export type SheetInput =
@@ -49,6 +53,7 @@ export type SheetInput =
   | { kind: "transfer"; sessionId: string }
   | { kind: "walkins" }
   | { kind: "premium" }
+  | { kind: "admin" }
   | { kind: "product"; itemId: string | null };
 
 export type SetupInput = Pick<Settings, "clubName" | "tableCount" | "rate" | "vipRate"> & {
@@ -59,6 +64,8 @@ type Undo = { type: "delete"; id: string } | { type: "restore"; session: Session
 
 type State = {
   settings: Settings;
+  // Server view (not persisted): refreshed from syncClub each time the Mini App opens.
+  cloud: { isAdmin: boolean; premiumRequested: boolean };
   menu: MenuItem[];
   sessions: Session[];
   bills: Bill[];
@@ -97,6 +104,8 @@ type State = {
   completeSetup: (input: SetupInput) => void;
   saveMenuItem: (item: Omit<MenuItem, "id"> & { id?: string }) => void;
   removeMenuItem: (id: string) => void;
+  applyCloud: (result: SyncResult) => void;
+  markPremiumRequested: () => void;
   toggleVipTable: (table: number) => void;
   setClubName: (name: string) => void;
 };
@@ -220,6 +229,7 @@ export const useClub = create<State>()(
 
       return {
         settings: DEFAULT_SETTINGS,
+        cloud: { isAdmin: false, premiumRequested: false },
         menu: [],
         sessions: [],
         bills: [],
@@ -235,8 +245,12 @@ export const useClub = create<State>()(
             get().pressDigit(String(n));
             return;
           }
-          if (n > st.settings.tableCount) return;
           const existing = st.sessions.find((s) => s.kind === "table" && s.table === n);
+          // A table already running stays reachable even if Premium lapsed, so its bill can close.
+          if (!existing && n > activeTables(st.settings)) {
+            if (!st.settings.premium && n > FREE_TABLE_LIMIT) get().pushSheet({ kind: "premium" });
+            return;
+          }
           if (!existing) {
             const session = makeTable(n);
             set({
@@ -644,6 +658,16 @@ export const useClub = create<State>()(
           }),
 
         removeMenuItem: (id) => set((st) => ({ menu: st.menu.filter((item) => item.id !== id) })),
+
+        // The server decides Premium; the local flag only mirrors it for offline use.
+        applyCloud: ({ premium, premiumRequested, isAdmin }) =>
+          set((st) => ({
+            settings: { ...st.settings, premium },
+            cloud: { isAdmin, premiumRequested },
+          })),
+
+        markPremiumRequested: () =>
+          set((st) => ({ cloud: { ...st.cloud, premiumRequested: true } })),
 
         toggleVipTable: (table) =>
           set((st) => {

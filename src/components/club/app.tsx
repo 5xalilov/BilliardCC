@@ -1,13 +1,17 @@
 import { useEffect, type ReactNode } from "react";
-import { Delete, History, Plus, SlidersHorizontal } from "lucide-react";
+import { Delete, History, Lock, SlidersHorizontal } from "lucide-react";
 import { Toaster } from "sonner";
 import { NowProvider, useNow } from "@/components/club/now";
 import { Onboarding } from "@/components/club/onboarding";
+import { Tour } from "@/components/club/tour";
 import { SheetHost } from "@/components/club/sheets";
 import { useResolvedTheme } from "@/components/club/theme";
 import { cn } from "@/lib/cn";
+import { callCloud, cloudAvailable, type SyncResult } from "@/lib/club/cloud";
 import {
+  FREE_GRID,
   FREE_TABLE_LIMIT,
+  activeTables,
   displayBucket,
   elapsedMs,
   formatClock,
@@ -17,15 +21,41 @@ import {
 } from "@/lib/club/logic";
 import { useClub } from "@/lib/club/store";
 
+// Inside Telegram, report the club to the server and take back Premium / admin access.
+// Runs on open, when the club's name or size changes, and when the app comes back to front
+// (so Premium switched on from the admin panel shows up without a restart).
+function useCloudSync() {
+  const setupDone = useClub((s) => s.settings.setupDone);
+  const clubName = useClub((s) => s.settings.clubName);
+  const tableCount = useClub((s) => s.settings.tableCount);
+
+  useEffect(() => {
+    if (!setupDone || !cloudAvailable()) return;
+    const sync = () =>
+      callCloud<SyncResult>("syncClub", { clubName, tableCount })
+        .then((result) => useClub.getState().applyCloud(result))
+        .catch(() => {});
+    const timer = setTimeout(sync, 300);
+    const onVisible = () => document.visibilityState === "visible" && sync();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [setupDone, clubName, tableCount]);
+}
+
 export function ClubApp() {
   const theme = useResolvedTheme();
   const setupDone = useClub((s) => s.settings.setupDone);
+  useCloudSync();
   return (
     <NowProvider>
       {setupDone ? (
         <>
           <ClubScreen />
           <SheetHost />
+          <Tour />
         </>
       ) : (
         <Onboarding />
@@ -127,7 +157,7 @@ function ClubScreen() {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-bg text-fg">
-      <header className="flex items-center justify-between px-4 pt-3">
+      <header className="flex items-center justify-between px-4 pt-3" data-tour="header">
         <button
           type="button"
           className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
@@ -164,16 +194,17 @@ function ClubScreen() {
       </button>
 
       <section className="pad-safe grid grid-cols-4 gap-3 px-3" aria-label="Boshqaruv">
-        <Key kind="symbol" tone="fn" ariaLabel="Bekor qilish" onClick={() => useClub.getState().pressUndo()}>
+        <Key kind="symbol" tone="fn" tour="clear" ariaLabel="Bekor qilish" onClick={() => useClub.getState().pressUndo()}>
           <Delete className="size-6" strokeWidth={1.75} />
         </Key>
-        <Key kind="symbol" tone="fn" label="AC" ariaLabel="Tozalash" onClick={() => useClub.getState().pressAC()} />
+        <Key kind="symbol" tone="fn" tour="clear" label="AC" ariaLabel="Tozalash" onClick={() => useClub.getState().pressAC()} />
         <Key
           kind={focused && focused.discountPct && !typing ? "word" : "symbol"}
           tone="fn"
           active={Boolean(focused && focused.discountPct > 0 && !typing)}
           disabled={typing}
           label={focused && focused.discountPct && !typing ? `${focused.discountPct}%` : "%"}
+          tour="discount"
           ariaLabel="Chegirma"
           onClick={() => useClub.getState().pressDiscount()}
         />
@@ -183,6 +214,7 @@ function ClubScreen() {
           label="BAR"
           badge={typing ? 0 : barQty}
           disabled={typing}
+          tour="bar"
           ariaLabel="Bar"
           onClick={() => useClub.getState().pressBar()}
         />
@@ -196,6 +228,7 @@ function ClubScreen() {
           active={paused && !typing}
           disabled={typing}
           label={paused && !typing ? "DAVOM" : "PAUZA"}
+          tour="pause"
           ariaLabel={paused ? "Davom ettirish" : "Pauza"}
           onClick={() => useClub.getState().pressPause()}
         />
@@ -204,6 +237,7 @@ function ClubScreen() {
           tone="op"
           label="AYIR"
           disabled={typing}
+          tour="addsub"
           ariaLabel="Ayirish"
           onClick={() => useClub.getState().pressRemove()}
         />
@@ -212,6 +246,7 @@ function ClubScreen() {
           tone="op"
           active={typing}
           label="QO'SH"
+          tour="addsub"
           ariaLabel="Qo'shish"
           onClick={() => useClub.getState().pressAdd()}
         />
@@ -221,6 +256,7 @@ function ClubScreen() {
           tone="fn"
           label="KO'CH"
           disabled={typing}
+          tour="bottom"
           ariaLabel="Ko'chirish"
           onClick={() => useClub.getState().pressTransfer()}
         />
@@ -231,6 +267,7 @@ function ClubScreen() {
           sub={typing ? undefined : "tashqi"}
           active={!typing && focused?.kind === "walkin"}
           live={!typing && walkins > 0 && focused?.kind !== "walkin"}
+          tour="bottom"
           ariaLabel="Tashqi"
           onClick={() => useClub.getState().pressWalkin()}
         />
@@ -239,10 +276,11 @@ function ClubScreen() {
           tone="fn"
           active={!typing && Boolean(focused?.vip)}
           label={typing ? "000" : "VIP"}
+          tour="bottom"
           ariaLabel={typing ? "Ming qo'shish" : "VIP narx"}
           onClick={() => useClub.getState().pressVip()}
         />
-        <Key kind="word" tone="op" label="HISOB" ariaLabel="Hisob" onClick={() => useClub.getState().pressHisob()} />
+        <Key kind="word" tone="op" tour="hisob" label="HISOB" ariaLabel="Hisob" onClick={() => useClub.getState().pressHisob()} />
       </section>
     </main>
   );
@@ -275,40 +313,73 @@ function gridColumns(count: number) {
 }
 
 function TableGrid({ now }: { now: number }) {
+  const premium = useClub((s) => s.settings.premium);
   const tableCount = useClub((s) => s.settings.tableCount);
-  const atFreeLimit = useClub((s) => !s.settings.premium && s.settings.tableCount >= FREE_TABLE_LIMIT);
-  const cols = gridColumns(tableCount);
+  // Free clubs see the whole 3×3 block, Premium clubs exactly their tables.
+  const shown = premium ? tableCount : Math.max(tableCount, FREE_GRID);
+  const usable = useClub((s) => activeTables(s.settings));
+  const cols = gridColumns(shown);
   const compact = cols > 3;
   return (
-    <div className="no-scrollbar absolute inset-0 overflow-y-auto">
+    <div className="no-scrollbar absolute inset-0 overflow-y-auto" data-tour="tables">
       <div
         className={cn("grid", compact ? "gap-2" : "gap-3")}
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
-          {Array.from({ length: tableCount }, (_, i) => (
-            <TableKey key={i + 1} n={i + 1} now={now} compact={compact} />
-          ))}
-          {atFreeLimit ? (
-            <button
-              type="button"
-              aria-label="Stol qo'shish"
-              onClick={() => useClub.getState().pushSheet({ kind: "premium" })}
-              className="key flex aspect-square items-center justify-center rounded-full border-2 border-dashed border-line text-muted"
-            >
-              <Plus className="size-7" strokeWidth={1.5} />
-            </button>
-          ) : null}
+        {Array.from({ length: shown }, (_, i) => (
+          <TableKey
+            key={i + 1}
+            n={i + 1}
+            now={now}
+            compact={compact}
+            locked={!premium && i + 1 > FREE_TABLE_LIMIT}
+            off={i + 1 > usable}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function TableKey({ n, now, compact }: { n: number; now: number; compact: boolean }) {
+function TableKey({
+  n,
+  now,
+  compact,
+  locked,
+  off,
+}: {
+  n: number;
+  now: number;
+  compact: boolean;
+  locked: boolean;
+  off: boolean;
+}) {
   const session = useClub((s) => s.sessions.find((x) => x.kind === "table" && x.table === n));
   const focusId = useClub((s) => s.focusId);
   const focused = Boolean(session) && session?.id === focusId;
   const paused = Boolean(session?.pauseStartedAt);
   const sub = session ? (paused ? "pauza" : formatClock(elapsedMs(session, now))) : undefined;
+
+  if (off && !session) {
+    // Locked keys stay tappable (they open Premium); a free club's unused 1–3 keys are just off.
+    return (
+      <button
+        type="button"
+        aria-label={locked ? `Stol ${n} — Premium` : `Stol ${n} — o'chiq`}
+        disabled={!locked}
+        data-tour={n === FREE_TABLE_LIMIT + 1 ? "locked" : undefined}
+        onClick={() => useClub.getState().pressTable(n)}
+        className="key relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
+      >
+        <span className={cn(labelClass("digit", false, compact), "leading-none")}>{n}</span>
+        {locked ? (
+          <span className="absolute right-[12%] top-[12%] flex size-5 items-center justify-center rounded-full bg-fg text-bg">
+            <Lock className="size-3" strokeWidth={2.5} />
+          </span>
+        ) : null}
+      </button>
+    );
+  }
 
   return (
     <Key
@@ -351,6 +422,7 @@ function Key({
   paused,
   badge,
   compact = false,
+  tour,
   ariaLabel,
   onClick,
   children,
@@ -365,6 +437,7 @@ function Key({
   paused?: boolean;
   badge?: number;
   compact?: boolean;
+  tour?: string;
   ariaLabel: string;
   onClick: () => void;
   children?: ReactNode;
@@ -374,6 +447,7 @@ function Key({
       type="button"
       aria-label={ariaLabel}
       disabled={disabled}
+      data-tour={tour}
       onClick={() => {
         if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(8);
         onClick();

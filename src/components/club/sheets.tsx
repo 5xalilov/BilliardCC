@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Crown, Minus, Moon, Plus, Sun, SunMoon, Trash2 } from "lucide-react";
+import { ChevronLeft, Crown, Minus, Moon, Plus, ShieldCheck, Sun, SunMoon, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useNow } from "@/components/club/now";
 import { cn } from "@/lib/cn";
 import {
@@ -20,6 +21,9 @@ import {
   type ThemeMode,
 } from "@/lib/club/logic";
 import { OrdeWordmark } from "@/components/club/logo";
+import guideKun from "@/assets/onboarding/guide-kun.webp";
+import guideTun from "@/assets/onboarding/guide-tun.webp";
+import { callCloud, cloudAvailable, type CloudClub } from "@/lib/club/cloud";
 import { GUIDE } from "@/lib/club/guide";
 import { useClub, type Sheet } from "@/lib/club/store";
 
@@ -128,6 +132,8 @@ function sheetTitle(sheet: Sheet, sessions: Session[]) {
       return { title: "Tashqi", sub: "Stolsiz mijozlar" };
     case "premium":
       return { title: "Premium", sub: "" };
+    case "admin":
+      return { title: "Admin panel", sub: "Klublar va Premium" };
     case "product":
       return { title: sheet.itemId ? "Mahsulot" : "Yangi mahsulot", sub: "" };
     default:
@@ -195,6 +201,8 @@ function SheetBody({ sheet }: { sheet: Sheet }) {
       return <WalkinSheet />;
     case "premium":
       return <PremiumSheet />;
+    case "admin":
+      return <AdminSheet />;
     case "product":
       return <ProductSheet itemId={sheet.itemId} />;
     default: {
@@ -669,10 +677,24 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function SettingsSheet() {
   const settings = useClub((s) => s.settings);
+  const isAdmin = useClub((s) => s.cloud.isAdmin);
   const [name, setName] = useState(settings.clubName);
   const theme = settings.theme ?? "auto";
   return (
     <div className="pad-safe space-y-4 px-4 pb-5">
+      {isAdmin ? (
+        <button
+          type="button"
+          className="key flex h-12 w-full items-center justify-between rounded-full bg-op px-5 text-base font-semibold text-on-op"
+          onClick={() => useClub.getState().pushSheet({ kind: "admin" })}
+        >
+          <span className="flex items-center gap-2">
+            <ShieldCheck className="size-4" />
+            Admin panel
+          </span>
+          <ChevronLeft className="size-4 rotate-180" />
+        </button>
+      ) : null}
       <div className="rounded-3xl bg-elev px-4 py-4">
         <p className="text-sm text-muted">Ko'rinish</p>
         <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Ko'rinish">
@@ -998,7 +1020,29 @@ const PREMIUM_PERKS = [
 
 function PremiumSheet() {
   const premium = useClub((s) => s.settings.premium);
-  const tg = typeof window !== "undefined" ? telegramWebApp() : null;
+  const requested = useClub((s) => s.cloud.premiumRequested);
+  const [busy, setBusy] = useState(false);
+  const online = cloudAvailable();
+
+  const request = async () => {
+    setBusy(true);
+    try {
+      const { status } = await callCloud<{ status: "active" | "sent" | "closed" }>("requestPremium");
+      if (status === "sent") {
+        useClub.getState().markPremiumRequested();
+        toast("So'rov yuborildi");
+      } else if (status === "active") {
+        toast("Premium faol");
+      } else {
+        toast("Premium ulash tez orada ochiladi");
+      }
+    } catch {
+      toast("Yuborilmadi — internetni tekshiring");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="pad-safe space-y-3 px-4 pb-5">
       <div className="flex flex-col items-center gap-2 py-2 text-center">
@@ -1013,36 +1057,139 @@ function PremiumSheet() {
           <p className="mt-1 text-sm text-muted">{body}</p>
         </div>
       ))}
-      {!premium ? (
-        tg ? (
-          <button
-            type="button"
-            className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
-            onClick={() => tg.close()}
-          >
-            Botda so'rash
-          </button>
-        ) : (
-          <p className="pt-2 text-center text-sm text-muted">Orde botida «⭐ Premium» tugmasini bosing.</p>
-        )
-      ) : null}
+      {premium ? null : online ? (
+        <button
+          type="button"
+          disabled={busy || requested}
+          className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-50"
+          onClick={request}
+        >
+          {requested ? "So'rov yuborilgan" : "Premium so'rash"}
+        </button>
+      ) : (
+        <p className="pt-2 text-center text-sm text-muted">Orde botida «⭐ Premium» tugmasini bosing.</p>
+      )}
     </div>
   );
 }
 
-function telegramWebApp(): { close: () => void } | null {
-  const tg = (window as { Telegram?: { WebApp?: { close: () => void; initData?: string } } }).Telegram?.WebApp;
-  // The SDK script defines WebApp everywhere; initData is only set inside Telegram.
-  return tg && tg.initData ? tg : null;
+function AdminSheet() {
+  const [clubs, setClubs] = useState<CloudClub[] | null>(null);
+  const [error, setError] = useState(false);
+  const [query, setQuery] = useState("");
+  const [pending, setPending] = useState<number | null>(null);
+
+  useEffect(() => {
+    callCloud<{ clubs: CloudClub[] }>("adminClubs")
+      .then((result) => setClubs(result.clubs))
+      .catch(() => setError(true));
+  }, []);
+
+  const toggle = async (club: CloudClub) => {
+    setPending(club.ownerId);
+    try {
+      const { club: next } = await callCloud<{ club: CloudClub }>("adminSetPremium", {
+        ownerId: club.ownerId,
+        premium: !club.premium,
+      });
+      setClubs((list) => list?.map((c) => (c.ownerId === next.ownerId ? next : c)) ?? null);
+      toast(next.premium ? "Premium yoqildi" : "Premium o'chirildi");
+    } catch {
+      toast("Saqlanmadi");
+    } finally {
+      setPending(null);
+    }
+  };
+
+  if (error) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">Ro'yxat yuklanmadi.</p>;
+  if (!clubs) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">Yuklanmoqda…</p>;
+
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? clubs.filter((c) =>
+        [c.clubName, c.ownerName, c.username, String(c.ownerId)].some((v) => v?.toLowerCase().includes(q)),
+      )
+    : clubs;
+
+  return (
+    <div className="pad-safe space-y-3 px-4 pb-5">
+      <div className="grid grid-cols-3 gap-2">
+        <Stat label="Klublar" value={String(clubs.length)} />
+        <Stat label="Premium" value={String(clubs.filter((c) => c.premium).length)} />
+        <Stat label="So'rovlar" value={String(clubs.filter((c) => c.premiumRequested).length)} />
+      </div>
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Qidirish: klub, ism, @username, id"
+        aria-label="Qidirish"
+        className="h-11 w-full rounded-full bg-elev px-4 text-base text-fg outline-none placeholder:text-muted/70"
+      />
+      {shown.length === 0 ? <p className="py-6 text-center text-sm text-muted">Hech narsa topilmadi</p> : null}
+      <ul className="space-y-2">
+        {shown.map((club) => (
+          <li key={club.ownerId} className="flex items-center gap-3 rounded-3xl bg-elev px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-2 truncate text-base font-semibold">
+                <span className="truncate">{club.clubName || "Sozlanmagan"}</span>
+                {club.premiumRequested ? (
+                  <span className="shrink-0 rounded-full bg-op px-2 py-0.5 text-xs font-semibold text-on-op">So'rov</span>
+                ) : null}
+              </p>
+              <p className="truncate text-sm text-muted">
+                {club.ownerName || "—"}
+                {club.username ? ` · @${club.username}` : ""}
+              </p>
+              <p className="text-xs text-muted tabular-nums">
+                {club.tableCount} stol · {formatWhen(club.lastSeen * 1000)}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={club.premium}
+              aria-label={`${club.clubName || club.ownerName} Premium`}
+              disabled={pending === club.ownerId}
+              onClick={() => toggle(club)}
+              className={cn(
+                "flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors disabled:opacity-50",
+                club.premium ? "bg-op" : "bg-fn",
+              )}
+            >
+              <span
+                className={cn(
+                  "size-6 rounded-full shadow transition-transform",
+                  club.premium ? "translate-x-5 bg-on-op" : "translate-x-0 bg-fg",
+                )}
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function HelpSheet() {
+  const replay = () => {
+    useClub.getState().patchSettings({ tourDone: false });
+    useClub.setState({ sheets: [] });
+  };
   return (
     <div className="pad-safe space-y-3 px-4 pb-5">
-      {GUIDE.map(([title, body]) => (
+      <img src={guideTun} alt="" className="only-tun mx-auto aspect-[4/3] w-full max-w-60 rounded-3xl object-cover" />
+      <img src={guideKun} alt="" className="only-kun mx-auto aspect-[4/3] w-full max-w-60 rounded-3xl object-cover" />
+      <button
+        type="button"
+        className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
+        onClick={replay}
+      >
+        Ko'rsatmani qayta ko'rish
+      </button>
+      {GUIDE.map(({ title, text }) => (
         <div key={title} className="rounded-3xl bg-elev px-4 py-3">
           <p className="text-sm font-semibold text-op-ink">{title}</p>
-          <p className="mt-1 text-sm text-pretty text-fg">{body}</p>
+          <p className="mt-1 text-sm text-pretty text-fg">{text}</p>
         </div>
       ))}
     </div>

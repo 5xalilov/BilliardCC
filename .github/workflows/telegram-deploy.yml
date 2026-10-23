@@ -74,6 +74,13 @@ jobs:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: npx -y "$TGCLOUD_CLI" push
 
+      # push never touches the database. --safe applies additive changes from
+      # tgcloud/schema.js (new tables/columns) and skips anything destructive.
+      - name: Apply database schema
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: npx -y "$TGCLOUD_CLI" migrate --safe
+
       - name: Verify Mini App is served
         run: |
           curl -fsS --retry 6 --retry-delay 5 --retry-all-errors -o /dev/null "$MINI_APP_URL" \

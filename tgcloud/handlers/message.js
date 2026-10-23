@@ -2,7 +2,8 @@
 // bot works with taps alone. /start also pins the Mini App as the chat menu button.
 
 import { api } from 'sdk';
-import { ADMIN_IDS, BUTTONS, MINI_APP_URL, mainKeyboard, openAppButton } from '../lib/app.js';
+import { BUTTONS, MINI_APP_URL, mainKeyboard, openAppButton } from '../lib/app.js';
+import { isAdmin as isAdminId, requestPremium, touchClub } from '../lib/clubs.js';
 import { BOT_PROFILE, TEXT } from '../lib/texts.js';
 
 export default async function (message) {
@@ -10,9 +11,10 @@ export default async function (message) {
   const chat_id = message.chat.id;
   const text = (message.text ?? '').trim();
   const command = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : null;
-  const isAdmin = ADMIN_IDS.includes(message.from?.id);
+  const isAdmin = isAdminId(message.from?.id);
 
   if (command === '/start') {
+    if (message.from) await touchClub(message.from);
     await api.setChatMenuButton({
       chat_id,
       menu_button: { type: 'web_app', text: 'Orde', web_app: { url: MINI_APP_URL } },
@@ -28,17 +30,13 @@ export default async function (message) {
 
   if (command === '/premium' || text === BUTTONS.premium) {
     await api.sendMessage({ chat_id, text: TEXT.premium });
-    if (ADMIN_IDS.length === 0) {
-      await api.sendMessage({ chat_id, text: TEXT.premiumClosed, reply_markup: mainKeyboard });
-      return;
-    }
-    const who = message.from;
-    const name = [who?.first_name, who?.last_name].filter(Boolean).join(' ');
-    const handle = who?.username ? ` @${who.username}` : '';
-    for (const admin of ADMIN_IDS) {
-      await api.sendMessage({ chat_id: admin, text: `⭐ Premium so'rovi: ${name}${handle} (id ${who?.id})` });
-    }
-    await api.sendMessage({ chat_id, text: TEXT.premiumSent, reply_markup: mainKeyboard });
+    const status = message.from ? await requestPremium(message.from) : 'closed';
+    const reply = { active: TEXT.premiumActive, sent: TEXT.premiumSent, closed: TEXT.premiumClosed };
+    await api.sendMessage({
+      chat_id,
+      text: reply[status],
+      reply_markup: mainKeyboard,
+    });
     return;
   }
 

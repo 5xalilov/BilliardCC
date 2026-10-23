@@ -6,10 +6,18 @@ ochiladi. Bot doimiy tugmalar bilan ishlaydi: **🎱 Kassani ochish**, **⭐ Pre
 
 ## Admin (platforma egasi)
 
-1. Botga `/myid` yozing — u Telegram ID'ingizni qaytaradi.
-2. ID'ni `tgcloud/lib/app.js` dagi `ADMIN_IDS` ro'yxatiga qo'shing va push qiling.
-3. Shundan keyin premium so'rovlari sizga keladi. `/botsetup` buyrug'i esa bot
-   tavsifi va buyruqlarini `tgcloud/lib/texts.js` dan o'rnatadi.
+Admin: Telegram ID `8480714616` (`tgcloud/lib/app.js` → `ADMIN_IDS`).
+
+- **Admin panel:** Mini App → Klub (sozlamalar) → eng tepada **Admin panel**.
+  Barcha klublar, Premium so'rovlari (yuqorida), qidiruv va har bir klub uchun
+  Premium kaliti. Yoqilganda klub egasiga bot xabar yuboradi.
+- **Premium so'rovlari** botga xabar bo'lib keladi (ilovadagi yoki botdagi
+  «⭐ Premium» tugmasidan).
+- `/botsetup` — bot tavsifi va buyruqlarini `tgcloud/lib/texts.js` dan o'rnatadi.
+- `/myid` — istalgan foydalanuvchining Telegram ID'si (yangi admin qo'shish uchun).
+
+Premium faqat serverda (tgcloud bazasi, `clubs` jadvali) saqlanadi: ilova uni
+har ochilganda `syncClub` orqali oladi, o'zi yoqib ololmaydi.
 
 ## Tuzilma
 
@@ -21,6 +29,9 @@ ochiladi. Bot doimiy tugmalar bilan ishlaydi: **🎱 Kassani ochish**, **⭐ Pre
 | `tgcloud/handlers/message.js` | Bot: tugmali menyu, premium so'rovi, yordam, `/myid`, `/botsetup` |
 | `tgcloud/lib/app.js` | Mini App manzili, tugmalar, `ADMIN_IDS` |
 | `tgcloud/lib/texts.js` | Bot matnlari va BotFather tavsiflari |
+| `tgcloud/schema.js` | Baza: `clubs` jadvali (egasi, klub, stollar, Premium) |
+| `tgcloud/lib/clubs.js` | Klub yozuvlari va Premium so'rovlari |
+| `tgcloud/endpoints/` | `syncClub`, `requestPremium`, `adminClubs`, `adminSetPremium` |
 | `.tgcloud/` | CLI holati va token — **git'ga kirmaydi** |
 
 ## Joylash — GitHub Actions orqali (tavsiya)

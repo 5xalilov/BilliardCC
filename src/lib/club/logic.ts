@@ -56,6 +56,9 @@ export type ThemeMode = "auto" | "light" | "dark";
 
 export const FREE_TABLE_LIMIT = 3;
 export const MAX_TABLES = 30;
+// The free keypad always shows a full 3×3 block: the first FREE_TABLE_LIMIT keys work,
+// the rest are locked and open the Premium sheet.
+export const FREE_GRID = 9;
 
 export type Settings = {
   clubName: string;
@@ -67,6 +70,7 @@ export type Settings = {
   theme: ThemeMode;
   premium: boolean;
   setupDone: boolean;
+  tourDone: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -79,10 +83,16 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "auto",
   premium: false,
   setupDone: false,
+  tourDone: false,
 };
 
 export function tableLimit(settings: Pick<Settings, "premium">) {
   return settings.premium ? MAX_TABLES : FREE_TABLE_LIMIT;
+}
+
+// Tables that can be opened right now (a club that lost Premium keeps its count but not its keys).
+export function activeTables(settings: Pick<Settings, "premium" | "tableCount">) {
+  return Math.min(settings.tableCount, tableLimit(settings));
 }
 
 // Offered once during club setup ("Namuna menyu"); a new club starts with an empty menu.
