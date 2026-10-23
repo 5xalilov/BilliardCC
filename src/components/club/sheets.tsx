@@ -45,14 +45,20 @@ import {
   unitKind,
 } from "@/lib/club/logic";
 import { OrdeBall, OrdeWordmark } from "@/components/club/logo";
-import guideKun from "@/assets/onboarding/guide-kun.webp";
-import guideTun from "@/assets/onboarding/guide-tun.webp";
 import { BUSINESSES, type BusinessKind } from "@/lib/club/business";
 import { Group, MiniStepper, Row, RowIcon, Segmented, StackRow, Switch } from "@/components/club/settings-ui";
+import {
+  HelpArticleSheet,
+  HelpCategorySheet,
+  HelpCenterSheet,
+  HelpKeysSheet,
+  LegalSheet,
+  SupportSheet,
+} from "@/components/club/help-center";
 import { callCloud, cloudAvailable, type CloudClub } from "@/lib/club/cloud";
 import { LANGS, translate, type Lang } from "@/lib/i18n";
 import { usePlaceLabel, useT } from "@/lib/i18n/use-t";
-import { GUIDE } from "@/lib/club/guide";
+import { findCategory } from "@/lib/club/help";
 import { useClub, type PickField, type SettingsPage, type Sheet } from "@/lib/club/store";
 
 export function SheetHost() {
@@ -134,6 +140,7 @@ function sheetTitle(
   t: ReturnType<typeof useT>,
   label: ReturnType<typeof usePlaceLabel>,
   business: BusinessKind,
+  lang: Lang,
 ) {
   const session = "sessionId" in sheet ? sessions.find((s) => s.id === sheet.sessionId) : undefined;
   const walkins = sessions.filter((s) => s.kind === "walkin").length;
@@ -159,7 +166,16 @@ function sheetTitle(
     case "menu":
       return { title: t("sheet.menu"), sub: "" };
     case "help":
-      return { title: t("sheet.help"), sub: "" };
+      return { title: t("help.center"), sub: "" };
+    case "helpCat":
+    case "helpArticle":
+      return { title: findCategory(lang, sheet.cat)?.title ?? t("help.center"), sub: "" };
+    case "helpKeys":
+      return { title: t("help.keys"), sub: "" };
+    case "support":
+      return { title: t("help.contact"), sub: "" };
+    case "legal":
+      return { title: t(sheet.doc === "privacy" ? "legal.privacy" : "legal.offer"), sub: "" };
     case "transfer":
       return { title: t("sheet.transfer"), sub: place };
     case "walkins":
@@ -190,7 +206,8 @@ function SheetHeader({ sheet, stacked }: { sheet: Sheet; stacked: boolean }) {
   const t = useT();
   const label = usePlaceLabel();
   const business = useClub((s) => s.settings.business);
-  const { title, sub } = sheetTitle(sheet, sessions, t, label, business);
+  const lang = useClub((s) => s.settings.lang);
+  const { title, sub } = sheetTitle(sheet, sessions, t, label, business, lang);
   return (
     <div className="shrink-0 px-4 pb-2 pt-3">
       <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line" />
@@ -240,7 +257,17 @@ function SheetBody({ sheet }: { sheet: Sheet }) {
     case "menu":
       return <MenuSheet />;
     case "help":
-      return <HelpSheet />;
+      return <HelpCenterSheet />;
+    case "helpCat":
+      return <HelpCategorySheet cat={sheet.cat} />;
+    case "helpArticle":
+      return <HelpArticleSheet cat={sheet.cat} article={sheet.article} />;
+    case "helpKeys":
+      return <HelpKeysSheet />;
+    case "support":
+      return <SupportSheet topic={sheet.topic} />;
+    case "legal":
+      return <LegalSheet doc={sheet.doc} />;
     case "transfer":
       return <TransferSheet sessionId={sheet.sessionId} />;
     case "walkins":
@@ -796,7 +823,7 @@ function SettingsSheet() {
           chevron
           onClick={() => push({ kind: "premium" })}
         />
-        <Row icon={CircleHelp} label={t("settings.help")} chevron onClick={() => push({ kind: "help" })} />
+        <Row icon={CircleHelp} label={t("help.center")} chevron onClick={() => push({ kind: "help" })} />
       </Group>
       <BrandFooter />
     </div>
@@ -1424,39 +1451,6 @@ function AdminSheet() {
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-function HelpSheet() {
-  const t = useT();
-  const business = useClub((s) => s.settings.business);
-  const guideVars = { units: t(`units.${business}`), free: FREE_TABLE_LIMIT };
-  const replay = () => {
-    useClub.getState().patchSettings({ tourDone: false });
-    useClub.setState({ sheets: [] });
-  };
-  return (
-    <div className="pad-safe space-y-3 px-4 pb-5">
-      <img src={guideTun} alt="" className="only-tun mx-auto aspect-[4/3] w-full max-w-60 rounded-3xl object-cover" />
-      <img src={guideKun} alt="" className="only-kun mx-auto aspect-[4/3] w-full max-w-60 rounded-3xl object-cover" />
-      <button
-        type="button"
-        className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
-        onClick={replay}
-      >
-        {t("help.replay")}
-      </button>
-      <Group>
-        {GUIDE.map(({ target }) => (
-          <div key={target} className="ios-row pl-4">
-            <div className="ios-row-body py-3 pr-4">
-              <p className="text-base font-semibold text-op-ink">{t(`guide.${target}.title`, guideVars)}</p>
-              <p className="mt-0.5 text-sm text-pretty text-muted">{t(`guide.${target}.text`, guideVars)}</p>
-            </div>
-          </div>
-        ))}
-      </Group>
     </div>
   );
 }

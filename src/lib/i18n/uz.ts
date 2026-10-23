@@ -187,6 +187,52 @@ export const uz = {
 
   "help.replay": "Ko'rsatmani qayta ko'rish",
 
+  "help.center": "Yordam",
+
+  "help.search": "Qidirish",
+
+  "help.keys": "Tugmalar",
+
+  "help.notFound": "Hech narsa topilmadi",
+
+  "help.contact": "So'rov qoldirish",
+
+  "help.contactSub": "Javob topmadingizmi? Bizga yozing.",
+
+  "help.docs": "Hujjatlar",
+
+  "legal.privacy": "Maxfiylik siyosati",
+
+  "legal.offer": "Ommaviy oferta",
+
+  "legal.updated": "Kuchga kirgan sana: {date}",
+
+  "support.topic": "Bo'lim",
+
+  "support.topicOther": "Boshqa",
+
+  "support.text": "Muammoni yozing",
+
+  "support.textPh": "Nima bo'ldi va qachon?",
+
+  "support.attach": "Skrinshot qo'shish",
+
+  "support.remove": "Olib tashlash",
+
+  "support.send": "Yuborish",
+
+  "support.sent": "So'rov yuborildi — tez orada javob beramiz",
+
+  "support.failed": "Yuborilmadi — internetni tekshiring",
+
+  "support.tooMany": "Bugun juda ko'p so'rov. Ertaga urinib ko'ring.",
+
+  "support.inBot": "So'rov faqat Telegram ichida yuboriladi. Orde botini oching.",
+
+  "support.reply": "Javob Telegram orqali keladi.",
+
+  "support.imageBig": "Rasm juda katta",
+
   "transfer.walkin": "Bo'sh joyga o'tkazilsa, vaqt hozirdan boshlanadi. Bar buyurtmalari saqlanadi.",
   "transfer.table": "Hisob boshqa bo'sh joyga o'tadi. Narx o'zgarmaydi.",
   "transfer.current": "shu",

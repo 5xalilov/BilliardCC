@@ -171,6 +171,52 @@ export const en: Partial<Dict> = {
 
   "help.replay": "Show the tips again",
 
+  "help.center": "Help",
+
+  "help.search": "Search",
+
+  "help.keys": "Keys",
+
+  "help.notFound": "Nothing found",
+
+  "help.contact": "Leave a request",
+
+  "help.contactSub": "Didn't find an answer? Write to us.",
+
+  "help.docs": "Documents",
+
+  "legal.privacy": "Privacy policy",
+
+  "legal.offer": "Public offer",
+
+  "legal.updated": "Effective {date}",
+
+  "support.topic": "Topic",
+
+  "support.topicOther": "Other",
+
+  "support.text": "Describe the problem",
+
+  "support.textPh": "What happened and when?",
+
+  "support.attach": "Add a screenshot",
+
+  "support.remove": "Remove",
+
+  "support.send": "Send",
+
+  "support.sent": "Request sent — we'll reply soon",
+
+  "support.failed": "Not sent — check your internet",
+
+  "support.tooMany": "Too many requests today. Try again tomorrow.",
+
+  "support.inBot": "Requests can only be sent inside Telegram. Open the Orde bot.",
+
+  "support.reply": "We'll answer in Telegram.",
+
+  "support.imageBig": "The image is too large",
+
   "transfer.walkin": "Moving to a free spot starts the clock now. Bar orders are kept.",
   "transfer.table": "The bill moves to another free spot. The rate stays the same.",
   "transfer.current": "here",
