@@ -15,7 +15,24 @@ javob beradi va chatning menyu tugmasini ham shu ilovaga bog'laydi.
 | `tgcloud/lib/app.js` | Mini App manzili |
 | `.tgcloud/` | CLI holati va token — **git'ga kirmaydi** |
 
-## Joylash
+## Joylash — GitHub Actions orqali (tavsiya)
+
+`.github/workflows/telegram-deploy.yml` build qiladi va Telegram'ga yuklaydi.
+
+1. Bir marta: GitHub → repo → **Settings → Secrets and variables → Actions →
+   New repository secret**. Nomi `TGCLOUD_TOKEN`, qiymati — @BotFather → bot →
+   Serverless → CLI Access → Access token.
+2. Shundan keyin `mini-app/`, `src/`, `public/`, `tgcloud/` yoki `tgcloud.jsonc`
+   o'zgargan har bir push (`main` yoki shu branch) avtomatik joylanadi.
+3. Qo'lda: **Actions → Telegram deploy → Run workflow** (tugma workflow `main`
+   branchga tushgandan keyin chiqadi). Oldingi ishni qayta yurgizish uchun —
+   ish sahifasida **Re-run jobs**.
+
+Ish ketma-ketligi: install → typecheck → build → `tgcloud fetch` (bulut holatini
+oladi) → `tgcloud push` → Mini App manzili javob berishini tekshirish →
+webhook holati.
+
+## Joylash — qo'lda
 
 ```sh
 npm run tg -- login        # token: @BotFather → bot → Serverless → CLI Access → Access token
