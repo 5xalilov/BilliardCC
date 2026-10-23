@@ -1,0 +1,9 @@
+{
+  // Telegram Serverless (tgcloud) project config — https://core.telegram.org/bots/serverless
+  // Bot code lives in tgcloud/; this block hosts the Mini App build.
+  // Build first (`npm run miniapp:build`), then `npx tgcloud push` — or `npm run miniapp:deploy`.
+  "static": {
+    "source": "dist-miniapp",
+    "spa": true,
+  },
+}

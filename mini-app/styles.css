@@ -1,0 +1,3 @@
+/* The Mini App build's root is mini-app/, so Tailwind must also scan the app's sources. */
+@import "../src/styles.css";
+@source "../src";
