@@ -18,6 +18,13 @@
   --color-on-op: #ffffff;
   --color-op-ink: #4fc99a;
   --color-live: #4fc99a;
+  --color-op-tint: #173a2e;
+  --color-warn: #e3ae4e;
+  --color-danger: #f2878b;
+  --color-danger-fill: #b83c42;
+  --color-on-danger: #ffffff;
+  --color-seg: #5a546a;
+  --color-scrim: rgb(0 0 0 / 0.6);
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
 }
 
@@ -43,6 +50,12 @@
   --color-on-op: #ffffff;
   --color-op-ink: #066648;
   --color-live: #087f5b;
+  --color-op-tint: #c2e1cf;
+  --color-warn: #7a4f00;
+  --color-danger: #b42f35;
+  --color-danger-fill: #b42f35;
+  --color-seg: #ffffff;
+  --color-scrim: rgb(19 23 34 / 0.38);
 }
 
 @media (prefers-color-scheme: light) {
@@ -62,6 +75,12 @@
     --color-on-op: #ffffff;
     --color-op-ink: #066648;
     --color-live: #087f5b;
+    --color-op-tint: #c2e1cf;
+    --color-warn: #7a4f00;
+    --color-danger: #b42f35;
+    --color-danger-fill: #b42f35;
+    --color-seg: #ffffff;
+    --color-scrim: rgb(19 23 34 / 0.38);
   }
 }
 
@@ -135,7 +154,20 @@
 }
 
 .key-paused {
-  --key-ring: inset 0 0 0 2px var(--color-muted);
+  --key-ring: inset 0 0 0 2px var(--color-warn);
+}
+
+/* Tanlangan stol, chip yoki variant: och yashil fon + yashil halqa (Noton'dagi tanlangan stol kartasi kabi). */
+.key-sel {
+  --key-ring: inset 0 0 0 2px var(--color-live);
+}
+
+/* Klaviatura bilan yurganda fokus aniq ko'rinsin. */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-live);
+  outline-offset: 2px;
 }
 
 /* Mode-specific artwork: show the Tun or Kun variant, following the same rules as the tokens. */

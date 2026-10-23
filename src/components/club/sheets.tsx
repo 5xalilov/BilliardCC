@@ -52,7 +52,7 @@ export function SheetHost() {
     <div className="fixed inset-0 z-40">
       <button
         type="button"
-        className="absolute inset-0 bg-bg/60"
+        className="absolute inset-0 bg-scrim"
         aria-label={t("common.back")}
         onClick={pop}
       />
@@ -258,11 +258,11 @@ function BarSheet() {
               onClick={() => useClub.getState().focusSession(session.id)}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-left",
-                on ? "bg-op text-on-op" : "bg-elev text-fg",
+                on ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
               )}
             >
               <span className="block text-sm font-semibold">{label(session, walkins)}</span>
-              <span className={cn("block text-xs tabular-nums", on ? "text-fg/80" : "text-muted")}>
+              <span className={cn("block text-xs tabular-nums", on ? "text-op-ink/80" : "text-muted")}>
                 {session.kind === "table" ? formatClock(quote(session, now, roundUp).elapsed) : t("bar.only")}
                 {" · "}
                 {formatSom(quote(session, now, roundUp).total)}
@@ -287,7 +287,7 @@ function BarSheet() {
             onClick={() => setCategory(item.id)}
             className={cn(
               "key shrink-0 rounded-full px-4 py-2 text-sm",
-              category === item.id ? "bg-fg text-bg" : "bg-elev text-fg",
+              category === item.id ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
             )}
           >
             {t(`cat.${item.id}`)}
@@ -387,7 +387,7 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
             onClick={() => setPct(value)}
             className={cn(
               "key aspect-square rounded-full text-sm font-semibold",
-              pct === value ? "bg-op text-on-op" : "bg-elev text-fg",
+              pct === value ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
             )}
           >
             {value === 0 ? t("discount.none") : value === 100 ? t("discount.free") : `${value}%`}
@@ -468,7 +468,7 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
       </button>
       <button
         type="button"
-        className="mt-3 w-full py-3 text-sm text-muted"
+        className="mt-3 w-full py-3 text-sm text-danger"
         onClick={() => useClub.getState().pushSheet({ kind: "void", sessionId })}
       >
         {t("close.void")}
@@ -554,7 +554,7 @@ function VoidSheet({ sessionId }: { sessionId: string }) {
         </button>
         <button
           type="button"
-          className="key h-12 rounded-full bg-op text-base font-semibold text-on-op"
+          className="key h-12 rounded-full bg-danger-fill text-base font-semibold text-on-danger"
           onClick={() => useClub.getState().voidBill(sessionId)}
         >
           {t("void.confirm")}
@@ -579,7 +579,7 @@ function ReceiptSheet({ billId }: { billId: string }) {
         <p className="mt-1 text-center text-lg font-semibold">{label(bill)}</p>
         <p className="text-center text-sm text-muted">{formatWhen(bill.closedAt)}</p>
         {bill.voided ? (
-          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-op-ink">{t("receipt.voided")}</p>
+          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-danger">{t("receipt.voided")}</p>
         ) : null}
         <div className="mt-4 divide-y divide-line">
           {bill.kind === "table" ? (
@@ -642,14 +642,14 @@ function HistorySheet() {
       <div className="mb-4 grid grid-cols-2 gap-2 rounded-full bg-elev p-1">
         <button
           type="button"
-          className={cn("key rounded-full py-2 text-sm", todayOnly ? "bg-op text-on-op" : "text-muted")}
+          className={cn("key rounded-full py-2 text-sm", todayOnly ? "bg-seg text-fg" : "text-muted")}
           onClick={() => setTodayOnly(true)}
         >
           {t("common.today")}
         </button>
         <button
           type="button"
-          className={cn("key rounded-full py-2 text-sm", !todayOnly ? "bg-op text-on-op" : "text-muted")}
+          className={cn("key rounded-full py-2 text-sm", !todayOnly ? "bg-seg text-fg" : "text-muted")}
           onClick={() => setTodayOnly(false)}
         >
           {t("common.all")}
@@ -740,7 +740,7 @@ function SettingsSheet() {
               aria-checked={theme === value}
               className={cn(
                 "key flex items-center justify-center gap-1.5 rounded-full py-2 text-sm",
-                theme === value ? "bg-op text-on-op" : "bg-fn text-fg",
+                theme === value ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
               )}
               onClick={() => useClub.getState().patchSettings({ theme: value })}
             >
@@ -808,7 +808,7 @@ function SettingsSheet() {
               type="button"
               className={cn(
                 "key rounded-full py-2 text-sm",
-                settings.roundUp === value ? "bg-op text-on-op" : "bg-fn text-fg",
+                settings.roundUp === value ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
               )}
               onClick={() => useClub.getState().patchSettings({ roundUp: value })}
             >
@@ -841,7 +841,7 @@ function SettingsSheet() {
                 aria-label={label({ kind: "table", table: n, seq: 0 })}
                 className={cn(
                   "key relative aspect-square rounded-full text-sm font-semibold",
-                  vip ? "bg-op text-on-op" : "bg-fn text-fg",
+                  vip ? "bg-op-tint text-op-ink" : "bg-fn text-fg",
                 )}
                 onClick={() => useClub.getState().pushSheet({ kind: "unit", n })}
               >
@@ -927,7 +927,7 @@ function ChoiceRow<T extends string>({
             onClick={() => onPick(option.id)}
             className={cn(
               "key shrink-0 rounded-full px-4 py-2 text-sm",
-              value === option.id ? "bg-op text-on-op" : "bg-fn text-fg",
+              value === option.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
             )}
           >
             {option.label}
@@ -1070,7 +1070,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
             aria-pressed={category === c.id}
             className={cn(
               "key rounded-full py-2 text-sm",
-              category === c.id ? "bg-op text-on-op" : "bg-fn text-fg",
+              category === c.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
             )}
             onClick={() => setCategory(c.id)}
           >
@@ -1191,7 +1191,7 @@ function UnitSheet({ n }: { n: number }) {
             type="button"
             aria-pressed={!unit.kind}
             onClick={() => set({ kind: undefined })}
-            className={cn("key shrink-0 rounded-full px-4 py-2 text-sm", !unit.kind ? "bg-op text-on-op" : "bg-fn text-fg")}
+            className={cn("key shrink-0 rounded-full px-4 py-2 text-sm", !unit.kind ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg")}
           >
             {t("unitSheet.clubType")}
           </button>
@@ -1203,7 +1203,7 @@ function UnitSheet({ n }: { n: number }) {
               onClick={() => set({ kind: b.id })}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-sm",
-                unit.kind === b.id ? "bg-op text-on-op" : "bg-fn text-fg",
+                unit.kind === b.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
               )}
             >
               {b.emoji} {t(`biz.${b.id}`)}
@@ -1409,7 +1409,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
               className={cn(
                 "key aspect-square rounded-full text-xl",
                 current && "bg-fg text-bg",
-                !current && pick === n && "bg-op text-on-op",
+                !current && pick === n && "bg-op-tint text-op-ink key-sel",
                 !current && pick !== n && "bg-key text-fg",
               )}
             >

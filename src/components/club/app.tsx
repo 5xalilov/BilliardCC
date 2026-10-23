@@ -66,10 +66,11 @@ export function ClubApp() {
         theme={theme}
         position="top-center"
         toastOptions={{
+          // Noton'dagi kabi: to'q "siyoh" fonli qisqa xabar (Tun rejimida och)
           style: {
-            background: "var(--color-sheet)",
-            color: "var(--color-fg)",
-            border: "1px solid var(--color-line)",
+            background: "var(--color-fg)",
+            color: "var(--color-bg)",
+            border: "none",
           },
         }}
       />
@@ -344,7 +345,7 @@ function ClubScreen() {
           ariaLabel={t(typing ? "aria.thousand" : "aria.vip")}
           onClick={() => useClub.getState().pressVip()}
         />
-        <Key slot={slot("hisob")} kind="word" tone="op" tour="hisob" label={t("key.bill")} ariaLabel={t("aria.bill")} onClick={() => useClub.getState().pressHisob()} />
+        <Key slot={slot("hisob")} kind="word" tone="primary" tour="hisob" label={t("key.bill")} ariaLabel={t("aria.bill")} onClick={() => useClub.getState().pressHisob()} />
       </section>
       {menu ? (
         <KeyMenu
@@ -519,9 +520,13 @@ function keyStyle(lifted: boolean | undefined, order?: number): CSSProperties {
   return { ...style, scale: "1.08", zIndex: 60, ["--key-shadow" as string]: "0 14px 36px rgb(0 0 0 / 0.45)" };
 }
 
-function toneClass(tone: "num" | "fn" | "op", active: boolean) {
-  if (active) return "bg-fg text-bg";
-  if (tone === "op") return "bg-op text-on-op";
+// Noton tartibi: to'liq yashil — asosiy amal (HISOB) va faol amal tugmasi; boshqa amallar — och yashil;
+// tanlangan stol/tugma — och yashil fon + yashil halqa (key-sel).
+function toneClass(tone: "num" | "fn" | "op" | "primary", active: boolean) {
+  if (active && (tone === "op" || tone === "primary")) return "bg-op text-on-op";
+  if (active) return "bg-op-tint text-op-ink key-sel";
+  if (tone === "primary") return "bg-op text-on-op";
+  if (tone === "op") return "bg-op-tint text-op-ink";
   if (tone === "fn") return "bg-fn text-fg";
   return "bg-key text-fg";
 }
@@ -552,7 +557,7 @@ function Key({
 }: {
   label?: string;
   sub?: string;
-  tone: "num" | "fn" | "op";
+  tone: "num" | "fn" | "op" | "primary";
   kind: "digit" | "word" | "symbol";
   active?: boolean;
   disabled?: boolean;
@@ -605,7 +610,7 @@ function Key({
               className={cn(
                 "mt-1 font-medium leading-none tabular-nums",
                 compact ? "text-[10px]" : "text-xs",
-                active ? "text-bg/70" : live ? "text-live" : paused ? "text-op-ink" : "text-muted",
+                active ? "text-op-ink" : live ? "text-live" : paused ? "text-warn" : "text-muted",
               )}
             >
               {sub}

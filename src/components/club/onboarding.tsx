@@ -127,7 +127,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
             onClick={() => useClub.getState().patchSettings({ lang: l.id })}
             className={cn(
               "key shrink-0 rounded-full px-3 py-1.5 text-sm",
-              lang === l.id ? "bg-op text-on-op" : "bg-key text-fg",
+              lang === l.id ? "bg-op-tint text-op-ink key-sel" : "bg-key text-fg",
             )}
           >
             {l.label}
@@ -167,7 +167,7 @@ function Business({ onNext }: { onNext: () => void }) {
               onClick={() => useClub.getState().patchSettings({ business: b.id })}
               className={cn(
                 "key flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl px-2 text-center",
-                business === b.id ? "bg-op text-on-op" : "bg-elev text-fg",
+                business === b.id ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
               )}
             >
               <span className="text-3xl leading-none">{b.emoji}</span>
