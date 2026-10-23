@@ -1,61 +1,67 @@
 @import "tailwindcss";
 
-/* Orde brand palette — "Tun" (night) is the default; "Kun" (day) below.
-   Stol Orange #ff7d0a is identical in both modes and always carries dark text.
-   Brand book: docs/brand/ORDE.md · contrast audit: docs/brand/stol-palette.json */
+/* Noton palitrasi (noton.uz bilan bir xil) — "Tun" (night) standart; "Kun" (day) pastda.
+   Asosiy amal — Noton yashili: Kun #087f5b, Tun #0b7a57, ikkalasida oq matn.
+   Neytrallar Noton lavanda tusida; tugmalar fondan ajralsin deb yorug'ligi biroz moslangan.
+   Kontrast auditi: docs/brand/noton-palette.json (node .claude/skills/ui-colorist/scripts/contrast.mjs).
+   Oldingi Orde to'q sariq palitrasi: docs/brand/ORDE.md, docs/brand/orde-palette.json */
 @theme {
-  --color-bg: #000000;
-  --color-sheet: #171514;
-  --color-key: #322f2c;
-  --color-elev: #2e2b28;
-  --color-fn: #5a554f;
-  --color-line: #3d3936;
-  --color-fg: #f7f6f4;
-  --color-muted: #c2bcb4;
-  --color-op: #ff7d0a;
-  --color-on-op: #160a00;
-  --color-op-ink: #ff9a3d;
-  --color-live: #ff7d0a;
+  --color-bg: #15131b;
+  --color-sheet: #1f1c27;
+  --color-key: #2e2a3a;
+  --color-elev: #332e40;
+  --color-fn: #5a546a;
+  --color-line: #3e384c;
+  --color-fg: #eceaf2;
+  --color-muted: #a29db2;
+  --color-op: #0b7a57;
+  --color-on-op: #ffffff;
+  --color-op-ink: #4fc99a;
+  --color-live: #4fc99a;
   --font-sans: "Outfit", ui-rounded, "Segoe UI", sans-serif;
 }
 
 :root {
   /* Keys stand off the background: a hairline edge plus a soft drop shadow. */
-  --key-edge: rgb(255 255 255 / 0.1);
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 6px rgb(0 0 0 / 0.55);
+  --key-edge: rgb(255 255 255 / 0.07);
+  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 2px 6px rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --key-edge: rgb(21 19 17 / 0.12);
-  --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
-  --color-bg: #f7f6f4;
+  --key-edge: rgb(32 42 44 / 0.1);
+  --key-shadow: 0 1px 2px rgb(51 39 82 / 0.08), 0 3px 8px rgb(51 39 82 / 0.06);
+  --color-bg: #f4f2fa;
   --color-sheet: #ffffff;
-  --color-key: #e1dcd4;
-  --color-elev: #e9e4dc;
-  --color-fn: #c9c1b6;
-  --color-line: #d2ccc2;
-  --color-fg: #151311;
-  --color-muted: #5c5650;
-  --color-op-ink: #a84400;
-  --color-live: #a84400;
+  --color-key: #ddd7ea;
+  --color-elev: #e5e0ef;
+  --color-fn: #c5bbd9;
+  --color-line: #d9d2e6;
+  --color-fg: #202a2c;
+  --color-muted: #5f6371;
+  --color-op: #087f5b;
+  --color-on-op: #ffffff;
+  --color-op-ink: #066648;
+  --color-live: #087f5b;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
-    --key-edge: rgb(21 19 17 / 0.12);
-    --key-shadow: 0 1px 2px rgb(21 19 17 / 0.1), 0 3px 8px rgb(21 19 17 / 0.07);
-    --color-bg: #f7f6f4;
+    --key-edge: rgb(32 42 44 / 0.1);
+    --key-shadow: 0 1px 2px rgb(51 39 82 / 0.08), 0 3px 8px rgb(51 39 82 / 0.06);
+    --color-bg: #f4f2fa;
     --color-sheet: #ffffff;
-    --color-key: #e1dcd4;
-    --color-elev: #e9e4dc;
-    --color-fn: #c9c1b6;
-    --color-line: #d2ccc2;
-    --color-fg: #151311;
-    --color-muted: #5c5650;
-    --color-op-ink: #a84400;
-    --color-live: #a84400;
+    --color-key: #ddd7ea;
+    --color-elev: #e5e0ef;
+    --color-fn: #c5bbd9;
+    --color-line: #d9d2e6;
+    --color-fg: #202a2c;
+    --color-muted: #5f6371;
+    --color-op: #087f5b;
+    --color-on-op: #ffffff;
+    --color-op-ink: #066648;
+    --color-live: #087f5b;
   }
 }
 
@@ -170,12 +176,12 @@
 }
 
 :root[data-theme="light"] .tour-spot {
-  --tour-dim: rgb(21 19 17 / 0.5);
+  --tour-dim: rgb(19 23 34 / 0.5);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) .tour-spot {
-    --tour-dim: rgb(21 19 17 / 0.5);
+    --tour-dim: rgb(19 23 34 / 0.5);
   }
 }
 
