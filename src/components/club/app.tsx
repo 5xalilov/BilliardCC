@@ -283,9 +283,9 @@ function TableKey({ n, typing, now }: { n: number; typing: boolean; now: number 
 }
 
 function toneClass(tone: "num" | "fn" | "op", active: boolean) {
-  if (active && tone === "op") return "bg-fg text-op";
+  if (active && tone === "op") return "bg-fg text-on-op";
   if (active) return "bg-fg text-bg";
-  if (tone === "op") return "bg-op text-fg";
+  if (tone === "op") return "bg-op text-on-op";
   if (tone === "fn") return "bg-fn text-fg";
   return "bg-key text-fg";
 }
@@ -351,7 +351,7 @@ function Key({
             <span
               className={cn(
                 "mt-1 text-xs font-medium leading-none tabular-nums",
-                active ? "text-bg/70" : live || paused ? "text-op" : "text-muted",
+                active ? "text-bg/70" : live ? "text-live" : paused ? "text-op" : "text-muted",
               )}
             >
               {sub}

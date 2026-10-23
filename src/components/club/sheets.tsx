@@ -218,7 +218,7 @@ function BarSheet() {
               onClick={() => useClub.getState().focusSession(session.id)}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-left",
-                on ? "bg-op text-fg" : "bg-elev text-fg",
+                on ? "bg-op text-on-op" : "bg-elev text-fg",
               )}
             >
               <span className="block text-sm font-semibold">{sessionLabel(session, walkins)}</span>
@@ -288,7 +288,7 @@ function BarSheet() {
                   <span className="w-5 text-center font-semibold tabular-nums">{qty}</span>
                   <button
                     type="button"
-                    className="key flex size-9 items-center justify-center rounded-full bg-op text-lg text-fg"
+                    className="key flex size-9 items-center justify-center rounded-full bg-op text-lg text-on-op"
                     aria-label={`${item.name} qo'shish`}
                     onClick={() => useClub.getState().addMenu(item.id)}
                   >
@@ -304,7 +304,7 @@ function BarSheet() {
       <div className="pad-safe sticky bottom-0 border-t border-line bg-sheet px-4 py-3">
         <button
           type="button"
-          className="key h-12 w-full rounded-full bg-op text-base font-semibold text-fg"
+          className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
           onClick={() => useClub.getState().popSheet()}
         >
           {cart && focused
@@ -335,7 +335,7 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
             onClick={() => setPct(value)}
             className={cn(
               "key aspect-square rounded-full text-sm font-semibold",
-              pct === value ? "bg-op text-fg" : "bg-elev text-fg",
+              pct === value ? "bg-op text-on-op" : "bg-elev text-fg",
             )}
           >
             {value === 0 ? "Yo'q" : value === 100 ? "Bepul" : `${value}%`}
@@ -347,7 +347,7 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
       </p>
       <button
         type="button"
-        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-fg"
+        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
         onClick={() => useClub.getState().setDiscount(sessionId, pct)}
       >
         Qo'llash
@@ -393,7 +393,7 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <button
           type="button"
-          className="key h-14 rounded-full bg-op text-base font-semibold text-fg"
+          className="key h-14 rounded-full bg-op text-base font-semibold text-on-op"
           onClick={() => useClub.getState().closeBill(sessionId, q.total, 0)}
         >
           Naqd
@@ -474,7 +474,7 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
       <button
         type="button"
         disabled={!valid}
-        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-fg disabled:opacity-40"
+        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
         onClick={() => useClub.getState().closeBill(sessionId, cash, total - cash)}
       >
         Yopish
@@ -499,7 +499,7 @@ function VoidSheet({ sessionId }: { sessionId: string }) {
         </button>
         <button
           type="button"
-          className="key h-12 rounded-full bg-op text-base font-semibold text-fg"
+          className="key h-12 rounded-full bg-op text-base font-semibold text-on-op"
           onClick={() => useClub.getState().voidBill(sessionId)}
         >
           Bekor qilish
@@ -559,7 +559,7 @@ function ReceiptSheet({ billId }: { billId: string }) {
       </div>
       <button
         type="button"
-        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-fg"
+        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
         onClick={() => useClub.getState().popSheet()}
       >
         Tayyor
@@ -583,14 +583,14 @@ function HistorySheet() {
       <div className="mb-4 grid grid-cols-2 gap-2 rounded-full bg-elev p-1">
         <button
           type="button"
-          className={cn("key rounded-full py-2 text-sm", todayOnly ? "bg-op text-fg" : "text-muted")}
+          className={cn("key rounded-full py-2 text-sm", todayOnly ? "bg-op text-on-op" : "text-muted")}
           onClick={() => setTodayOnly(true)}
         >
           Bugun
         </button>
         <button
           type="button"
-          className={cn("key rounded-full py-2 text-sm", !todayOnly ? "bg-op text-fg" : "text-muted")}
+          className={cn("key rounded-full py-2 text-sm", !todayOnly ? "bg-op text-on-op" : "text-muted")}
           onClick={() => setTodayOnly(false)}
         >
           Hammasi
@@ -693,7 +693,7 @@ function SettingsSheet() {
               type="button"
               className={cn(
                 "key rounded-full py-2 text-sm",
-                settings.roundUp === value ? "bg-op text-fg" : "bg-key text-fg",
+                settings.roundUp === value ? "bg-op text-on-op" : "bg-fn text-fg",
               )}
               onClick={() => useClub.getState().patchSettings({ roundUp: value })}
             >
@@ -711,7 +711,7 @@ function SettingsSheet() {
               type="button"
               className={cn(
                 "key rounded-full py-2 text-sm",
-                settings.tableCount === count ? "bg-op text-fg" : "bg-key text-fg",
+                settings.tableCount === count ? "bg-op text-on-op" : "bg-fn text-fg",
               )}
               onClick={() => useClub.getState().setTableCount(count)}
             >
@@ -730,7 +730,7 @@ function SettingsSheet() {
                 aria-pressed={on}
                 className={cn(
                   "key aspect-square rounded-full text-sm font-semibold",
-                  on ? "bg-op text-fg" : "bg-key text-fg",
+                  on ? "bg-op text-on-op" : "bg-fn text-fg",
                 )}
                 onClick={() => useClub.getState().toggleVipTable(n)}
               >
@@ -886,7 +886,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
               className={cn(
                 "key aspect-square rounded-full text-xl",
                 current && "bg-fg text-bg",
-                !current && pick === n && "bg-op text-fg",
+                !current && pick === n && "bg-op text-on-op",
                 !current && pick !== n && "bg-key text-fg",
               )}
             >
@@ -898,7 +898,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
       <button
         type="button"
         disabled={pick === null}
-        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-fg disabled:opacity-40"
+        className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
         onClick={() => pick !== null && useClub.getState().transferTo(sessionId, pick)}
       >
         Ko'chirish
@@ -933,7 +933,7 @@ function WalkinSheet() {
               </button>
               <button
                 type="button"
-                className="key rounded-full bg-op px-4 py-2 text-sm font-semibold text-fg"
+                className="key rounded-full bg-op px-4 py-2 text-sm font-semibold text-on-op"
                 onClick={() => {
                   useClub.getState().focusSession(session.id);
                   useClub.getState().pushSheet({ kind: "close", sessionId: session.id });

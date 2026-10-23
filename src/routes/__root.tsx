@@ -12,7 +12,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: APP_NAME },
       { name: "description", content: "Bilyard klub uchun stol, vaqt va bar hisobi." },
-      { name: "theme-color", content: "#000000" },
+      { name: "theme-color", content: "#0b0f0b" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

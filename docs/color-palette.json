@@ -1,0 +1,40 @@
+{
+  "name": "Felt & Brass",
+  "colors": {
+    "bg": "#0b0f0b",
+    "fg": "#f1f4ec",
+    "muted": "#c1c9be",
+    "key": "#272b26",
+    "fn": "#3a4b3a",
+    "op": "#e9c16c",
+    "on-op": "#3f2e00",
+    "live": "#9cd49f",
+    "sheet": "#1c211c",
+    "elev": "#313630",
+    "line": "#424940"
+  },
+  "pairs": [
+    ["fg", "bg", "text"],
+    ["fg", "sheet", "text"],
+    ["fg", "elev", "text"],
+    ["muted", "bg", "text"],
+    ["muted", "sheet", "text"],
+    ["muted", "elev", "text"],
+    ["fg", "key", "large"],
+    ["fg", "fn", "large"],
+    ["on-op", "op", "text"],
+    ["on-op", "fg", "text"],
+    ["bg", "fg", "text"],
+    ["op", "bg", "text"],
+    ["op", "elev", "text"],
+    ["op", "key", "large"],
+    ["live", "bg", "text"],
+    ["live", "key", "ui"],
+    ["muted", "key", "ui"],
+    ["key", "bg", "sep"],
+    ["fn", "key", "sep"],
+    ["fn", "elev", "sep"],
+    ["elev", "sheet", "sep"],
+    ["line", "sheet", "sep"]
+  ]
+}
