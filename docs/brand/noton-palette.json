@@ -14,7 +14,13 @@
       "op": "#0b7a57",
       "on-op": "#ffffff",
       "op-ink": "#4fc99a",
-      "live": "#4fc99a"
+      "live": "#4fc99a",
+      "op-tint": "#173a2e",
+      "warn": "#e3ae4e",
+      "danger": "#f2878b",
+      "danger-fill": "#b83c42",
+      "on-danger": "#ffffff",
+      "seg": "#5a546a"
     },
     "kun": {
       "bg": "#f4f2fa",
@@ -28,7 +34,13 @@
       "op": "#087f5b",
       "on-op": "#ffffff",
       "op-ink": "#066648",
-      "live": "#087f5b"
+      "live": "#087f5b",
+      "op-tint": "#c2e1cf",
+      "warn": "#7a4f00",
+      "danger": "#b42f35",
+      "danger-fill": "#b42f35",
+      "on-danger": "#ffffff",
+      "seg": "#ffffff"
     }
   },
   "pairs": [
@@ -136,6 +148,57 @@
       "line",
       "sheet",
       "sep"
+    ],
+    [
+      "op-ink",
+      "op-tint",
+      "text"
+    ],
+    [
+      "fg",
+      "op-tint",
+      "text"
+    ],
+    [
+      "live",
+      "op-tint",
+      "ui"
+    ],
+    [
+      "op-tint",
+      "bg",
+      "sep"
+    ],
+    [
+      "warn",
+      "key",
+      "text"
+    ],
+    [
+      "warn",
+      "bg",
+      "text"
+    ],
+    [
+      "danger",
+      "sheet",
+      "text"
+    ],
+    [
+      "danger",
+      "elev",
+      "text"
+    ],
+    [
+      "on-danger",
+      "danger-fill",
+      "text"
+    ],
+    [
+      "fg",
+      "seg",
+      "text"
     ]
-  ]
+  ],
+  "notes": "2026-10-24 dizayn bosqichi: op-tint (ikkinchi darajali amal va tanlangan holat), warn (pauza), danger/danger-fill (bekor qilish), seg (segment tanlovi). Asosiy to'liq yashil faqat asosiy amalda."
 }
