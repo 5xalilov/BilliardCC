@@ -13,7 +13,6 @@ import {
   formatWhen,
   itemQty,
   quote,
-  sessionLabel,
   tashkentDay,
   type Bill,
   type MenuCategory,
@@ -28,11 +27,13 @@ import guideKun from "@/assets/onboarding/guide-kun.webp";
 import guideTun from "@/assets/onboarding/guide-tun.webp";
 import { BUSINESSES } from "@/lib/club/business";
 import { callCloud, cloudAvailable, type CloudClub } from "@/lib/club/cloud";
-import { useT } from "@/lib/i18n/use-t";
+import { LANGS, translate } from "@/lib/i18n";
+import { usePlaceLabel, useT } from "@/lib/i18n/use-t";
 import { GUIDE } from "@/lib/club/guide";
 import { useClub, type Sheet } from "@/lib/club/store";
 
 export function SheetHost() {
+  const t = useT();
   const sheets = useClub((s) => s.sheets);
   const pop = useClub((s) => s.popSheet);
 
@@ -52,7 +53,7 @@ export function SheetHost() {
       <button
         type="button"
         className="absolute inset-0 bg-bg/60"
-        aria-label="Orqaga"
+        aria-label={t("common.back")}
         onClick={pop}
       />
       <div className="pointer-events-none relative z-10 mx-auto h-full w-full max-w-md">
@@ -104,45 +105,49 @@ function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; coun
   );
 }
 
-function sheetTitle(sheet: Sheet, sessions: Session[]) {
+function sheetTitle(
+  sheet: Sheet,
+  sessions: Session[],
+  t: ReturnType<typeof useT>,
+  label: ReturnType<typeof usePlaceLabel>,
+) {
   const session = "sessionId" in sheet ? sessions.find((s) => s.id === sheet.sessionId) : undefined;
   const walkins = sessions.filter((s) => s.kind === "walkin").length;
-  const place = session ? sessionLabel(session, walkins) : "";
+  const place = session ? label(session, walkins) : "";
   switch (sheet.kind) {
     case "bar":
-      return { title: "Bar", sub: place || "Joy tanlang" };
+      return { title: t("sheet.bar"), sub: place || t("sheet.pickPlace") };
     case "discount":
-      return { title: "Chegirma", sub: place };
+      return { title: t("sheet.discount"), sub: place };
     case "close":
-      return { title: "Hisob", sub: place };
+      return { title: t("sheet.close"), sub: place };
     case "split":
-      return { title: "Aralash to'lov", sub: place };
+      return { title: t("sheet.split"), sub: place };
     case "void":
-      return { title: "Bekor qilish", sub: place };
+      return { title: t("sheet.void"), sub: place };
     case "receipt":
-      return { title: "Chek", sub: "" };
-    case "history":
-      return { title: "Tarix", sub: "" };
     case "bill":
-      return { title: "Chek", sub: "" };
+      return { title: t("sheet.receipt"), sub: "" };
+    case "history":
+      return { title: t("sheet.history"), sub: "" };
     case "settings":
-      return { title: "Klub", sub: "" };
+      return { title: t("sheet.settings"), sub: "" };
     case "menu":
-      return { title: "Menyu", sub: "" };
+      return { title: t("sheet.menu"), sub: "" };
     case "help":
-      return { title: "Qanday ishlaydi", sub: "" };
+      return { title: t("sheet.help"), sub: "" };
     case "transfer":
-      return { title: "Ko'chirish", sub: place };
+      return { title: t("sheet.transfer"), sub: place };
     case "walkins":
-      return { title: "Tashqi", sub: "Stolsiz mijozlar" };
+      return { title: t("walkin"), sub: t("walkin.sub") };
     case "premium":
-      return { title: "Premium", sub: "" };
+      return { title: t("sheet.premium"), sub: "" };
     case "admin":
-      return { title: "Admin panel", sub: "Klublar va Premium" };
+      return { title: t("sheet.admin"), sub: t("sheet.adminSub") };
     case "unit":
-      return { title: `#${sheet.n}`, sub: "" };
+      return { title: label({ kind: "table", table: sheet.n, seq: 0 }), sub: "" };
     case "product":
-      return { title: sheet.itemId ? "Mahsulot" : "Yangi mahsulot", sub: "" };
+      return { title: sheet.itemId ? t("sheet.product") : t("sheet.productNew"), sub: "" };
     default:
       return { title: "", sub: "" };
   }
@@ -151,7 +156,9 @@ function sheetTitle(sheet: Sheet, sessions: Session[]) {
 function SheetHeader({ sheet, stacked }: { sheet: Sheet; stacked: boolean }) {
   const sessions = useClub((s) => s.sessions);
   const pop = useClub((s) => s.popSheet);
-  const { title, sub } = sheetTitle(sheet, sessions);
+  const t = useT();
+  const label = usePlaceLabel();
+  const { title, sub } = sheetTitle(sheet, sessions, t, label);
   return (
     <div className="shrink-0 px-4 pb-2 pt-3">
       <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line" />
@@ -161,7 +168,7 @@ function SheetHeader({ sheet, stacked }: { sheet: Sheet; stacked: boolean }) {
             type="button"
             onClick={pop}
             className="key flex size-9 items-center justify-center rounded-full bg-elev text-fg"
-            aria-label="Orqaga"
+            aria-label={t("common.back")}
           >
             <ChevronLeft className="size-5" />
           </button>
@@ -226,6 +233,7 @@ function useSession(sessionId: string | null) {
 }
 
 function BarSheet() {
+  const t = useT();
   const now = useNow();
   const sessions = useClub((s) => s.sessions);
   const focusId = useClub((s) => s.focusId);
@@ -236,6 +244,7 @@ function BarSheet() {
   const walkins = sessions.filter((s) => s.kind === "walkin").length;
   const items = menu.filter((item) => category === "all" || item.category === category);
   const cart = focused ? quote(focused, now, roundUp) : null;
+  const label = usePlaceLabel();
 
   return (
     <div className="flex flex-col">
@@ -252,9 +261,9 @@ function BarSheet() {
                 on ? "bg-op text-on-op" : "bg-elev text-fg",
               )}
             >
-              <span className="block text-sm font-semibold">{sessionLabel(session, walkins)}</span>
+              <span className="block text-sm font-semibold">{label(session, walkins)}</span>
               <span className={cn("block text-xs tabular-nums", on ? "text-fg/80" : "text-muted")}>
-                {session.kind === "table" ? formatClock(quote(session, now, roundUp).elapsed) : "bar"}
+                {session.kind === "table" ? formatClock(quote(session, now, roundUp).elapsed) : t("bar.only")}
                 {" · "}
                 {formatSom(quote(session, now, roundUp).total)}
               </span>
@@ -266,7 +275,7 @@ function BarSheet() {
           className="key shrink-0 rounded-full bg-elev px-4 py-2 text-sm font-semibold text-fg"
           onClick={() => useClub.getState().createWalkin()}
         >
-          + Tashqi
+          {t("walkin.add")}
         </button>
       </div>
 
@@ -281,13 +290,13 @@ function BarSheet() {
               category === item.id ? "bg-fg text-bg" : "bg-elev text-fg",
             )}
           >
-            {item.label}
+            {t(`cat.${item.id}`)}
           </button>
         ))}
       </div>
 
       {sessions.length === 0 ? (
-        <p className="px-4 pb-4 text-sm text-muted">Avval stol yoki tashqi oching.</p>
+        <p className="px-4 pb-4 text-sm text-muted">{t("bar.openFirst")}</p>
       ) : null}
 
       {menu.length === 0 ? (
@@ -298,7 +307,7 @@ function BarSheet() {
             onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: null })}
           >
             <Plus className="size-5" />
-            Mahsulot qo'shish
+            {t("product.add")}
           </button>
         </div>
       ) : null}
@@ -322,7 +331,7 @@ function BarSheet() {
                   <button
                     type="button"
                     className="key flex size-9 items-center justify-center rounded-full bg-fn text-lg text-fg"
-                    aria-label={`${item.name}ni ayirish`}
+                    aria-label={t("product.less", { name: item.name })}
                     onClick={() => useClub.getState().decMenu(item.id)}
                   >
                     −
@@ -331,7 +340,7 @@ function BarSheet() {
                   <button
                     type="button"
                     className="key flex size-9 items-center justify-center rounded-full bg-op text-lg text-on-op"
-                    aria-label={`${item.name} qo'shish`}
+                    aria-label={t("product.more", { name: item.name })}
                     onClick={() => useClub.getState().addMenu(item.id)}
                   >
                     +
@@ -350,8 +359,8 @@ function BarSheet() {
           onClick={() => useClub.getState().popSheet()}
         >
           {cart && focused
-            ? `Tayyor · ${sessionLabel(focused, walkins)} · ${formatSom(cart.total)}`
-            : "Tayyor"}
+            ? t("common.doneWith", { place: label(focused, walkins), total: formatSom(cart.total) })
+            : t("common.done")}
         </button>
       </div>
     </div>
@@ -361,6 +370,7 @@ function BarSheet() {
 const DISCOUNTS = [0, 5, 10, 15, 20, 30, 50, 100];
 
 function DiscountSheet({ sessionId }: { sessionId: string }) {
+  const t = useT();
   const session = useSession(sessionId);
   const now = useNow();
   const roundUp = useClub((s) => s.settings.roundUp);
@@ -380,25 +390,26 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
               pct === value ? "bg-op text-on-op" : "bg-elev text-fg",
             )}
           >
-            {value === 0 ? "Yo'q" : value === 100 ? "Bepul" : `${value}%`}
+            {value === 0 ? t("discount.none") : value === 100 ? t("discount.free") : `${value}%`}
           </button>
         ))}
       </div>
       <p className="mt-4 text-center text-sm text-muted">
-        Yangi jami <span className="text-base font-semibold text-fg tabular-nums">{formatSom(preview.total)}</span>
+        {t("discount.newTotal")} <span className="text-base font-semibold text-fg tabular-nums">{formatSom(preview.total)}</span>
       </p>
       <button
         type="button"
         className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
         onClick={() => useClub.getState().setDiscount(sessionId, pct)}
       >
-        Qo'llash
+        {t("common.apply")}
       </button>
     </div>
   );
 }
 
 function CloseSheet({ sessionId }: { sessionId: string }) {
+  const t = useT();
   const session = useSession(sessionId);
   const now = useNow();
   const roundUp = useClub((s) => s.settings.roundUp);
@@ -408,16 +419,16 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
     <div className="pad-safe px-4 pb-4">
       <p className="text-center text-sm text-muted">
         {session.kind === "table"
-          ? `${formatClock(q.elapsed)} · ${q.minutes} daq`
-          : "Faqat bar"}
-        {session.pauseStartedAt ? " · pauza" : ""}
+          ? `${formatClock(q.elapsed)} · ${t("close.minutes", { min: q.minutes })}`
+          : t("close.barOnly")}
+        {session.pauseStartedAt ? ` · ${t("close.paused")}` : ""}
       </p>
       <p className="mt-1 text-center text-5xl font-light tabular-nums text-fg">{formatSom(q.total)}</p>
       <div className="mt-3 divide-y divide-line">
         {session.kind === "table" ? (
           <MoneyLine
-            label="Vaqt"
-            detail={`${q.minutes} daq × ${formatSom(session.ratePerHour)}/soat${session.vip ? " · VIP" : ""}`}
+            label={t("close.time")}
+            detail={`${t("close.timeDetail", { min: q.minutes, rate: formatSom(session.ratePerHour) })}${session.vip ? " · VIP" : ""}`}
             amount={q.time}
           />
         ) : null}
@@ -429,7 +440,7 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
           />
         ))}
         {q.discountAmt > 0 ? (
-          <MoneyLine label={`Chegirma ${session.discountPct}%`} amount={q.discountAmt} negative />
+          <MoneyLine label={t("close.discount", { pct: session.discountPct })} amount={q.discountAmt} negative />
         ) : null}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
@@ -438,14 +449,14 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
           className="key h-14 rounded-full bg-op text-base font-semibold text-on-op"
           onClick={() => useClub.getState().closeBill(sessionId, q.total, 0)}
         >
-          Naqd
+          {t("common.cash")}
         </button>
         <button
           type="button"
           className="key h-14 rounded-full bg-fn text-base font-semibold text-fg"
           onClick={() => useClub.getState().closeBill(sessionId, 0, q.total)}
         >
-          Karta
+          {t("common.card")}
         </button>
       </div>
       <button
@@ -453,20 +464,21 @@ function CloseSheet({ sessionId }: { sessionId: string }) {
         className="key mt-3 h-12 w-full rounded-full bg-elev text-base font-medium text-fg"
         onClick={() => useClub.getState().pushSheet({ kind: "split", sessionId })}
       >
-        Aralash
+        {t("close.mixed")}
       </button>
       <button
         type="button"
         className="mt-3 w-full py-3 text-sm text-muted"
         onClick={() => useClub.getState().pushSheet({ kind: "void", sessionId })}
       >
-        Hisobni bekor qilish
+        {t("close.void")}
       </button>
     </div>
   );
 }
 
 function SplitSheet({ sessionId }: { sessionId: string }) {
+  const t = useT();
   const session = useSession(sessionId);
   const now = useNow();
   const roundUp = useClub((s) => s.settings.roundUp);
@@ -479,12 +491,12 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
   const chips = [10000, 20000, 50000, 100000];
   return (
     <div className="pad-safe px-4 pb-4">
-      <p className="text-center text-sm text-muted">Jami {formatSom(total)}</p>
+      <p className="text-center text-sm text-muted">{t("split.total", { total: formatSom(total) })}</p>
       <input
         inputMode="numeric"
         value={raw ? formatSom(cash) : ""}
-        placeholder="Naqd summa"
-        aria-label="Naqd summa"
+        placeholder={t("split.cash")}
+        aria-label={t("split.cash")}
         onChange={(event) => setRaw(event.target.value.replace(/\D/g, "").slice(0, 7))}
         className="mt-3 w-full rounded-2xl bg-bg px-4 py-4 text-2xl text-fg outline-none tabular-nums"
       />
@@ -494,7 +506,7 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
           className="key rounded-full bg-elev px-4 py-2 text-sm text-fg"
           onClick={() => setRaw(String(Math.floor(total / 2)))}
         >
-          Yarmi
+          {t("split.half")}
         </button>
         {chips.map((chip) => (
           <button
@@ -508,10 +520,10 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
         ))}
       </div>
       <p className="mt-4 text-center text-sm text-muted">
-        Kartaga <span className="font-semibold text-fg tabular-nums">{formatSom(Math.max(0, card))}</span>
+        {t("split.toCard")} <span className="font-semibold text-fg tabular-nums">{formatSom(Math.max(0, card))}</span>
       </p>
       {!valid && cash > 0 ? (
-        <p className="mt-1 text-center text-sm text-op-ink">Naqd jami ichida bo'lsin</p>
+        <p className="mt-1 text-center text-sm text-op-ink">{t("split.invalid")}</p>
       ) : null}
       <button
         type="button"
@@ -519,17 +531,18 @@ function SplitSheet({ sessionId }: { sessionId: string }) {
         className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
         onClick={() => useClub.getState().closeBill(sessionId, cash, total - cash)}
       >
-        Yopish
+        {t("common.close")}
       </button>
     </div>
   );
 }
 
 function VoidSheet({ sessionId }: { sessionId: string }) {
+  const t = useT();
   return (
     <div className="pad-safe px-4 pb-5">
       <p className="text-center text-base text-pretty">
-        Hisob yopiladi, lekin pul tushumga kirmaydi. Tasodifiy ochilgan stol uchun.
+        {t("void.text")}
       </p>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button
@@ -537,14 +550,14 @@ function VoidSheet({ sessionId }: { sessionId: string }) {
           className="key h-12 rounded-full bg-elev text-base font-medium text-fg"
           onClick={() => useClub.getState().popSheet()}
         >
-          Qoldirish
+          {t("void.keep")}
         </button>
         <button
           type="button"
           className="key h-12 rounded-full bg-op text-base font-semibold text-on-op"
           onClick={() => useClub.getState().voidBill(sessionId)}
         >
-          Bekor qilish
+          {t("void.confirm")}
         </button>
       </div>
     </div>
@@ -552,8 +565,10 @@ function VoidSheet({ sessionId }: { sessionId: string }) {
 }
 
 function ReceiptSheet({ billId }: { billId: string }) {
+  const t = useT();
   const bill = useClub((s) => s.bills.find((item) => item.id === billId) ?? null);
   const clubName = useClub((s) => s.settings.clubName);
+  const label = usePlaceLabel();
   if (!bill) return <Missing />;
   return (
     <div className="pad-safe px-4 pb-4">
@@ -561,16 +576,16 @@ function ReceiptSheet({ billId }: { billId: string }) {
         <p className="text-center text-sm font-semibold tracking-widest text-muted">
           {clubName.toUpperCase()}
         </p>
-        <p className="mt-1 text-center text-lg font-semibold">{bill.label}</p>
+        <p className="mt-1 text-center text-lg font-semibold">{label(bill)}</p>
         <p className="text-center text-sm text-muted">{formatWhen(bill.closedAt)}</p>
         {bill.voided ? (
-          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-op-ink">BEKOR</p>
+          <p className="mt-2 text-center text-sm font-semibold tracking-widest text-op-ink">{t("receipt.voided")}</p>
         ) : null}
         <div className="mt-4 divide-y divide-line">
           {bill.kind === "table" ? (
             <MoneyLine
-              label="Vaqt"
-              detail={`${bill.billedMinutes} daq × ${formatSom(bill.ratePerHour)}/soat`}
+              label={t("close.time")}
+              detail={t("close.timeDetail", { min: bill.billedMinutes, rate: formatSom(bill.ratePerHour) })}
               amount={bill.timeCharge}
             />
           ) : null}
@@ -582,20 +597,20 @@ function ReceiptSheet({ billId }: { billId: string }) {
             />
           ))}
           {bill.discountAmt > 0 ? (
-            <MoneyLine label={`Chegirma ${bill.discountPct}%`} amount={bill.discountAmt} negative />
+            <MoneyLine label={t("close.discount", { pct: bill.discountPct })} amount={bill.discountAmt} negative />
           ) : null}
         </div>
         <div className="mt-3 flex items-baseline justify-between">
-          <span className="text-sm text-muted">Jami</span>
+          <span className="text-sm text-muted">{t("common.total")}</span>
           <span className="text-2xl font-medium tabular-nums">{formatSom(bill.total)}</span>
         </div>
         {!bill.voided ? (
           <p className="mt-2 text-right text-sm text-muted">
             {bill.card > 0 && bill.cash > 0
-              ? `Naqd ${formatSom(bill.cash)} · karta ${formatSom(bill.card)}`
+              ? t("receipt.split", { cash: formatSom(bill.cash), card: formatSom(bill.card) })
               : bill.card > 0
-                ? "Karta"
-                : "Naqd"}
+                ? t("common.card")
+                : t("common.cash")}
           </p>
         ) : null}
       </div>
@@ -604,13 +619,14 @@ function ReceiptSheet({ billId }: { billId: string }) {
         className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
         onClick={() => useClub.getState().popSheet()}
       >
-        Tayyor
+        {t("common.done")}
       </button>
     </div>
   );
 }
 
 function HistorySheet() {
+  const t = useT();
   const bills = useClub((s) => s.bills);
   const now = useNow();
   const [todayOnly, setTodayOnly] = useState(true);
@@ -620,6 +636,7 @@ function HistorySheet() {
   const revenue = paid.reduce((sum, bill) => sum + bill.total, 0);
   const cash = paid.reduce((sum, bill) => sum + bill.cash, 0);
   const card = paid.reduce((sum, bill) => sum + bill.card, 0);
+  const label = usePlaceLabel();
   return (
     <div className="pad-safe px-4 pb-4">
       <div className="mb-4 grid grid-cols-2 gap-2 rounded-full bg-elev p-1">
@@ -628,23 +645,23 @@ function HistorySheet() {
           className={cn("key rounded-full py-2 text-sm", todayOnly ? "bg-op text-on-op" : "text-muted")}
           onClick={() => setTodayOnly(true)}
         >
-          Bugun
+          {t("common.today")}
         </button>
         <button
           type="button"
           className={cn("key rounded-full py-2 text-sm", !todayOnly ? "bg-op text-on-op" : "text-muted")}
           onClick={() => setTodayOnly(false)}
         >
-          Hammasi
+          {t("common.all")}
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="Tushum" value={formatSom(revenue)} />
-        <Stat label="Naqd" value={formatSom(cash)} />
-        <Stat label="Karta" value={formatSom(card)} />
+        <Stat label={t("history.revenue")} value={formatSom(revenue)} />
+        <Stat label={t("common.cash")} value={formatSom(cash)} />
+        <Stat label={t("common.card")} value={formatSom(card)} />
       </div>
       {shown.length === 0 ? (
-        <p className="px-2 py-10 text-center text-sm text-muted">Hali yopilgan hisob yo'q.</p>
+        <p className="px-2 py-10 text-center text-sm text-muted">{t("history.empty")}</p>
       ) : (
         <ul className="mt-4 divide-y divide-line">
           {shown.map((bill) => (
@@ -656,11 +673,11 @@ function HistorySheet() {
               >
                 <span>
                   <span className={cn("block text-base", bill.voided && "text-muted line-through")}>
-                    {bill.label}
+                    {label(bill)}
                   </span>
                   <span className="block text-sm text-muted">
                     {formatWhen(bill.closedAt)}
-                    {bill.voided ? " · bekor" : ""}
+                    {bill.voided ? ` · ${t("history.voided")}` : ""}
                   </span>
                 </span>
                 <span className={cn("tabular-nums", bill.voided ? "text-muted" : "text-fg")}>
@@ -685,10 +702,12 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function SettingsSheet() {
+  const t = useT();
   const settings = useClub((s) => s.settings);
   const isAdmin = useClub((s) => s.cloud.isAdmin);
   const [name, setName] = useState(settings.clubName);
   const theme = settings.theme ?? "auto";
+  const label = usePlaceLabel();
   return (
     <div className="pad-safe space-y-4 px-4 pb-5">
       {isAdmin ? (
@@ -699,19 +718,19 @@ function SettingsSheet() {
         >
           <span className="flex items-center gap-2">
             <ShieldCheck className="size-4" />
-            Admin panel
+            {t("sheet.admin")}
           </span>
           <ChevronLeft className="size-4 rotate-180" />
         </button>
       ) : null}
       <div className="rounded-3xl bg-elev px-4 py-4">
-        <p className="text-sm text-muted">Ko'rinish</p>
-        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Ko'rinish">
+        <p className="text-sm text-muted">{t("settings.appearance")}</p>
+        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("settings.appearance")}>
           {(
             [
-              ["auto", "Avto", SunMoon],
-              ["light", "Kun", Sun],
-              ["dark", "Tun", Moon],
+              ["auto", t("theme.auto"), SunMoon],
+              ["light", t("theme.light"), Sun],
+              ["dark", t("theme.dark"), Moon],
             ] as const satisfies readonly (readonly [ThemeMode, string, typeof Sun])[]
           ).map(([value, label, Icon]) => (
             <button
@@ -731,13 +750,25 @@ function SettingsSheet() {
           ))}
         </div>
       </div>
+      <ChoiceRow
+        label={t("sheet.language")}
+        value={settings.lang}
+        options={LANGS.map((l) => ({ id: l.id, label: l.label }))}
+        onPick={(lang) => useClub.getState().patchSettings({ lang })}
+      />
+      <ChoiceRow
+        label={t("sheet.business")}
+        value={settings.business}
+        options={BUSINESSES.map((b) => ({ id: b.id, label: `${b.emoji} ${t(`biz.${b.id}`)}` }))}
+        onPick={(business) => useClub.getState().patchSettings({ business })}
+      />
       <div className="overflow-hidden rounded-3xl bg-elev">
         <label className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm text-muted">Nomi</span>
+          <span className="text-sm text-muted">{t("settings.name")}</span>
           <input
             value={name}
             maxLength={32}
-            aria-label="Klub nomi"
+            aria-label={t("settings.clubName")}
             onChange={(event) => setName(event.target.value)}
             onBlur={() => useClub.getState().setClubName(name)}
             className="w-40 bg-transparent text-right text-base text-fg outline-none"
@@ -746,7 +777,7 @@ function SettingsSheet() {
       </div>
       <div className="space-y-4 rounded-3xl bg-elev px-4 py-4">
         <Stepper
-          label="Oddiy soat"
+          label={t("settings.rate")}
           value={settings.rate}
           min={5000}
           max={500000}
@@ -754,22 +785,22 @@ function SettingsSheet() {
           onChange={(rate) => useClub.getState().patchSettings({ rate })}
         />
         <Stepper
-          label="VIP soat"
+          label={t("settings.vipRate")}
           value={settings.vipRate}
           min={5000}
           max={800000}
           step={5000}
           onChange={(vipRate) => useClub.getState().patchSettings({ vipRate })}
         />
-        <p className="text-sm text-muted">Ochiq stollarga yangi narx qo'yilmaydi.</p>
+        <p className="text-sm text-muted">{t("settings.ratesNote")}</p>
       </div>
       <div className="rounded-3xl bg-elev px-4 py-4">
-        <p className="text-sm text-muted">Vaqt yaxlitlash</p>
+        <p className="text-sm text-muted">{t("settings.rounding")}</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {(
             [
-              [1, "1 daqiqa"],
-              [15, "15 daqiqa"],
+              [1, t("settings.round1")],
+              [15, t("settings.round15")],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -788,7 +819,7 @@ function SettingsSheet() {
       </div>
       <div className="rounded-3xl bg-elev px-4 py-4">
         <Stepper
-          label="Stollar"
+          label={t(`units.${settings.business}`)}
           value={settings.tableCount}
           min={1}
           max={MAX_TABLES}
@@ -796,24 +827,26 @@ function SettingsSheet() {
           onChange={(count) => useClub.getState().setTableCount(count)}
         />
         {!settings.premium ? (
-          <p className="mt-2 text-sm text-muted">Bepul: {FREE_TABLE_LIMIT} tagacha stol</p>
+          <p className="mt-2 text-sm text-muted">{t("settings.freeLimit", { n: FREE_TABLE_LIMIT })}</p>
         ) : null}
-        <p className="mt-4 text-sm text-muted">VIP stollar</p>
+        <p className="mt-4 text-sm text-muted">{t("settings.each")}</p>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {Array.from({ length: settings.tableCount }, (_, i) => i + 1).map((n) => {
-            const on = settings.vipTables.includes(n);
+            const custom = Object.keys(unitConfig(settings, n)).length > 0;
+            const vip = settings.vipTables.includes(n);
             return (
               <button
                 key={n}
                 type="button"
-                aria-pressed={on}
+                aria-label={label({ kind: "table", table: n, seq: 0 })}
                 className={cn(
-                  "key aspect-square rounded-full text-sm font-semibold",
-                  on ? "bg-op text-on-op" : "bg-fn text-fg",
+                  "key relative aspect-square rounded-full text-sm font-semibold",
+                  vip ? "bg-op text-on-op" : "bg-fn text-fg",
                 )}
-                onClick={() => useClub.getState().toggleVipTable(n)}
+                onClick={() => useClub.getState().pushSheet({ kind: "unit", n })}
               >
                 {n}
+                {custom ? <span className="absolute right-0.5 top-0.5 size-2.5 rounded-full bg-fg ring-2 ring-elev" /> : null}
               </button>
             );
           })}
@@ -826,7 +859,7 @@ function SettingsSheet() {
       >
         <span className="flex items-center gap-2">
           <Crown className="size-4 text-op-ink" />
-          {settings.premium ? "Premium faol" : "Premium"}
+          {settings.premium ? t("settings.premiumActive") : t("sheet.premium")}
         </span>
         <ChevronLeft className="size-4 rotate-180" />
       </button>
@@ -835,7 +868,7 @@ function SettingsSheet() {
         className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
         onClick={() => useClub.getState().pushSheet({ kind: "menu" })}
       >
-        Menyu
+        {t("settings.menu")}
         <ChevronLeft className="size-4 rotate-180" />
       </button>
       <button
@@ -843,7 +876,7 @@ function SettingsSheet() {
         className="key flex h-12 w-full items-center justify-between rounded-full bg-elev px-5 text-base text-fg"
         onClick={() => useClub.getState().pushSheet({ kind: "help" })}
       >
-        Qanday ishlaydi
+        {t("settings.help")}
         <ChevronLeft className="size-4 rotate-180" />
       </button>
       <BrandFooter />
@@ -852,10 +885,47 @@ function SettingsSheet() {
 }
 
 function BrandFooter() {
+  const t = useT();
   return (
     <div className="flex flex-col items-center gap-2 pt-4 pb-1">
       <OrdeWordmark className="h-7 text-fg" />
-      <span className="text-xs text-muted">Bilyard klub kassasi</span>
+      <span className="text-xs text-muted">{t("brand.tagline")}</span>
+    </div>
+  );
+}
+
+// A labelled, horizontally scrolling row of single-choice chips (language, business kind).
+function ChoiceRow<T extends string>({
+  label,
+  value,
+  options,
+  onPick,
+}: {
+  label: string;
+  value: T;
+  options: { id: T; label: string }[];
+  onPick: (id: T) => void;
+}) {
+  return (
+    <div>
+      <p className="px-1 pb-2 text-sm text-muted">{label}</p>
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="radiogroup" aria-label={label}>
+        {options.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="radio"
+            aria-checked={value === option.id}
+            onClick={() => onPick(option.id)}
+            className={cn(
+              "key shrink-0 rounded-full px-4 py-2 text-sm",
+              value === option.id ? "bg-op text-on-op" : "bg-fn text-fg",
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -875,6 +945,7 @@ export function Stepper({
   step: number;
   onChange: (value: number) => void;
 }) {
+  const lang = useClub((s) => s.settings.lang);
   return (
     <div>
       <p className="text-sm text-muted">{label}</p>
@@ -882,7 +953,7 @@ export function Stepper({
         <button
           type="button"
           className="key flex size-11 items-center justify-center rounded-full bg-key text-fg"
-          aria-label={`${label} kamaytirish`}
+          aria-label={translate(lang, "common.dec", { label })}
           onClick={() => onChange(Math.max(min, value - step))}
         >
           <Minus className="size-4" />
@@ -891,7 +962,7 @@ export function Stepper({
         <button
           type="button"
           className="key flex size-11 items-center justify-center rounded-full bg-key text-fg"
-          aria-label={`${label} oshirish`}
+          aria-label={translate(lang, "common.inc", { label })}
           onClick={() => onChange(Math.min(max, value + step))}
         >
           <Plus className="size-4" />
@@ -902,6 +973,7 @@ export function Stepper({
 }
 
 function MenuSheet() {
+  const t = useT();
   const menu = useClub((s) => s.menu);
   return (
     <div className="pad-safe space-y-3 px-4 pb-5">
@@ -911,10 +983,10 @@ function MenuSheet() {
         onClick={() => useClub.getState().pushSheet({ kind: "product", itemId: null })}
       >
         <Plus className="size-5" />
-        Mahsulot qo'shish
+        {t("product.add")}
       </button>
       {menu.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted">Menyu bo'sh</p>
+        <p className="py-6 text-center text-sm text-muted">{t("menu.empty")}</p>
       ) : (
         <ul className="overflow-hidden rounded-3xl bg-elev">
           {menu.map((item) => (
@@ -927,7 +999,7 @@ function MenuSheet() {
                 <span className="min-w-0">
                   <span className="block truncate text-base">{item.name}</span>
                   <span className="text-sm text-muted">
-                    {MENU_CATEGORIES.find((c) => c.id === item.category)?.label}
+                    {t(`cat.${item.category}`)}
                   </span>
                 </span>
                 <span className="shrink-0 text-base tabular-nums">{formatSom(item.price)}</span>
@@ -941,6 +1013,7 @@ function MenuSheet() {
 }
 
 function ProductSheet({ itemId }: { itemId: string | null }) {
+  const t = useT();
   const existing = useClub((s) => (itemId ? s.menu.find((item) => item.id === itemId) ?? null : null));
   const [name, setName] = useState(existing?.name ?? "");
   const [price, setPrice] = useState(existing ? String(existing.price) : "");
@@ -958,23 +1031,23 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
     <div className="pad-safe space-y-4 px-4 pb-5">
       <div className="overflow-hidden rounded-3xl bg-elev">
         <label className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-          <span className="text-sm text-muted">Nomi</span>
+          <span className="text-sm text-muted">{t("product.name")}</span>
           <input
             value={name}
             maxLength={40}
             autoFocus={!existing}
-            aria-label="Mahsulot nomi"
-            placeholder="Cola"
+            aria-label={t("product.nameLabel")}
+            placeholder={t("product.namePh")}
             onChange={(event) => setName(event.target.value)}
             className="min-w-0 flex-1 bg-transparent text-right text-base text-fg outline-none placeholder:text-muted/60"
           />
         </label>
         <label className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm text-muted">Narxi</span>
+          <span className="text-sm text-muted">{t("product.price")}</span>
           <input
             value={price ? formatSom(amount) : ""}
             inputMode="numeric"
-            aria-label="Narxi"
+            aria-label={t("product.price")}
             placeholder="12 000"
             onChange={(event) => setPrice(event.target.value.replace(/\D/g, "").slice(0, 9))}
             className="min-w-0 flex-1 bg-transparent text-right text-base tabular-nums text-fg outline-none placeholder:text-muted/60"
@@ -993,7 +1066,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
             )}
             onClick={() => setCategory(c.id)}
           >
-            {c.label}
+            {t(`cat.${c.id}`)}
           </button>
         ))}
       </div>
@@ -1003,7 +1076,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
         className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
         onClick={save}
       >
-        Saqlash
+        {t("common.save")}
       </button>
       {existing ? (
         <button
@@ -1015,19 +1088,15 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
           }}
         >
           <Trash2 className="size-4" />
-          O'chirish
+          {t("common.delete")}
         </button>
       ) : null}
     </div>
   );
 }
 
-const PREMIUM_PERKS = [
-  [`${MAX_TABLES} tagacha stol`, `Bepul tarifda ${FREE_TABLE_LIMIT} ta stol.`],
-  ["VIP stollar va narxlar", "Har bir stol uchun alohida narx."],
-] as const;
-
 function PremiumSheet() {
+  const t = useT();
   const premium = useClub((s) => s.settings.premium);
   const requested = useClub((s) => s.cloud.premiumRequested);
   const [busy, setBusy] = useState(false);
@@ -1039,14 +1108,14 @@ function PremiumSheet() {
       const { status } = await callCloud<{ status: "active" | "sent" | "closed" }>("requestPremium");
       if (status === "sent") {
         useClub.getState().markPremiumRequested();
-        toast("So'rov yuborildi");
+        toast(t("premium.sent"));
       } else if (status === "active") {
-        toast("Premium faol");
+        toast(t("premium.already"));
       } else {
-        toast("Premium ulash tez orada ochiladi");
+        toast(t("premium.soon"));
       }
     } catch {
-      toast("Yuborilmadi — internetni tekshiring");
+      toast(t("premium.failed"));
     } finally {
       setBusy(false);
     }
@@ -1058,14 +1127,12 @@ function PremiumSheet() {
         <span className="flex size-14 items-center justify-center rounded-full bg-op text-on-op">
           <Crown className="size-7" strokeWidth={1.75} />
         </span>
-        <p className="text-sm text-muted">{premium ? "Klubingizda Premium faol" : "Katta klublar uchun"}</p>
+        <p className="text-sm text-muted">{premium ? t("premium.active") : t("premium.for")}</p>
       </div>
-      {PREMIUM_PERKS.map(([title, body]) => (
-        <div key={title} className="rounded-3xl bg-elev px-4 py-3">
-          <p className="text-base font-semibold">{title}</p>
-          <p className="mt-1 text-sm text-muted">{body}</p>
-        </div>
-      ))}
+      <div className="rounded-3xl bg-elev px-4 py-3">
+        <p className="text-base font-semibold">{t("premium.perkUnits", { n: MAX_TABLES })}</p>
+        <p className="mt-1 text-sm text-muted">{t("premium.perkUnitsSub", { free: FREE_TABLE_LIMIT })}</p>
+      </div>
       {premium ? null : online ? (
         <button
           type="button"
@@ -1073,10 +1140,10 @@ function PremiumSheet() {
           className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-50"
           onClick={request}
         >
-          {requested ? "So'rov yuborilgan" : "Premium so'rash"}
+          {requested ? t("premium.requested") : t("premium.request")}
         </button>
       ) : (
-        <p className="pt-2 text-center text-sm text-muted">Orde botida «⭐ Premium» tugmasini bosing.</p>
+        <p className="pt-2 text-center text-sm text-muted">{t("premium.inBot")}</p>
       )}
     </div>
   );
@@ -1183,6 +1250,7 @@ function UnitSheet({ n }: { n: number }) {
 }
 
 function AdminSheet() {
+  const t = useT();
   const [clubs, setClubs] = useState<CloudClub[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
@@ -1202,16 +1270,16 @@ function AdminSheet() {
         premium: !club.premium,
       });
       setClubs((list) => list?.map((c) => (c.ownerId === next.ownerId ? next : c)) ?? null);
-      toast(next.premium ? "Premium yoqildi" : "Premium o'chirildi");
+      toast(next.premium ? t("admin.enabled") : t("admin.disabled"));
     } catch {
-      toast("Saqlanmadi");
+      toast(t("admin.saveFailed"));
     } finally {
       setPending(null);
     }
   };
 
-  if (error) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">Ro'yxat yuklanmadi.</p>;
-  if (!clubs) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">Yuklanmoqda…</p>;
+  if (error) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">{t("admin.loadFailed")}</p>;
+  if (!clubs) return <p className="pad-safe px-4 py-8 text-center text-sm text-muted">{t("admin.loading")}</p>;
 
   const q = query.trim().toLowerCase();
   const shown = q
@@ -1223,26 +1291,26 @@ function AdminSheet() {
   return (
     <div className="pad-safe space-y-3 px-4 pb-5">
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="Klublar" value={String(clubs.length)} />
-        <Stat label="Premium" value={String(clubs.filter((c) => c.premium).length)} />
-        <Stat label="So'rovlar" value={String(clubs.filter((c) => c.premiumRequested).length)} />
+        <Stat label={t("admin.clubs")} value={String(clubs.length)} />
+        <Stat label={t("sheet.premium")} value={String(clubs.filter((c) => c.premium).length)} />
+        <Stat label={t("admin.requests")} value={String(clubs.filter((c) => c.premiumRequested).length)} />
       </div>
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Qidirish: klub, ism, @username, id"
-        aria-label="Qidirish"
+        placeholder={t("admin.search")}
+        aria-label={t("admin.searchLabel")}
         className="h-11 w-full rounded-full bg-elev px-4 text-base text-fg outline-none placeholder:text-muted/70"
       />
-      {shown.length === 0 ? <p className="py-6 text-center text-sm text-muted">Hech narsa topilmadi</p> : null}
+      {shown.length === 0 ? <p className="py-6 text-center text-sm text-muted">{t("admin.notFound")}</p> : null}
       <ul className="space-y-2">
         {shown.map((club) => (
           <li key={club.ownerId} className="flex items-center gap-3 rounded-3xl bg-elev px-4 py-3">
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 truncate text-base font-semibold">
-                <span className="truncate">{club.clubName || "Sozlanmagan"}</span>
+                <span className="truncate">{club.clubName || t("admin.notSetUp")}</span>
                 {club.premiumRequested ? (
-                  <span className="shrink-0 rounded-full bg-op px-2 py-0.5 text-xs font-semibold text-on-op">So'rov</span>
+                  <span className="shrink-0 rounded-full bg-op px-2 py-0.5 text-xs font-semibold text-on-op">{t("admin.request")}</span>
                 ) : null}
               </p>
               <p className="truncate text-sm text-muted">
@@ -1250,7 +1318,7 @@ function AdminSheet() {
                 {club.username ? ` · @${club.username}` : ""}
               </p>
               <p className="text-xs text-muted tabular-nums">
-                {club.tableCount} stol · {formatWhen(club.lastSeen * 1000)}
+                {t("admin.units", { n: club.tableCount })} · {formatWhen(club.lastSeen * 1000)}
               </p>
             </div>
             <button
@@ -1280,6 +1348,9 @@ function AdminSheet() {
 }
 
 function HelpSheet() {
+  const t = useT();
+  const business = useClub((s) => s.settings.business);
+  const guideVars = { units: t(`units.${business}`), free: FREE_TABLE_LIMIT };
   const replay = () => {
     useClub.getState().patchSettings({ tourDone: false });
     useClub.setState({ sheets: [] });
@@ -1293,12 +1364,12 @@ function HelpSheet() {
         className="key h-12 w-full rounded-full bg-op text-base font-semibold text-on-op"
         onClick={replay}
       >
-        Ko'rsatmani qayta ko'rish
+        {t("help.replay")}
       </button>
-      {GUIDE.map(({ title, text }) => (
-        <div key={title} className="rounded-3xl bg-elev px-4 py-3">
-          <p className="text-sm font-semibold text-op-ink">{title}</p>
-          <p className="mt-1 text-sm text-pretty text-fg">{text}</p>
+      {GUIDE.map(({ target }) => (
+        <div key={target} className="rounded-3xl bg-elev px-4 py-3">
+          <p className="text-sm font-semibold text-op-ink">{t(`guide.${target}.title`, guideVars)}</p>
+          <p className="mt-1 text-sm text-pretty text-fg">{t(`guide.${target}.text`, guideVars)}</p>
         </div>
       ))}
     </div>
@@ -1306,6 +1377,7 @@ function HelpSheet() {
 }
 
 function TransferSheet({ sessionId }: { sessionId: string }) {
+  const t = useT();
   const session = useSession(sessionId);
   const sessions = useClub((s) => s.sessions);
   const tableCount = useClub((s) => s.settings.tableCount);
@@ -1314,9 +1386,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
   return (
     <div className="pad-safe px-4 pb-4">
       <p className="mb-3 text-sm text-muted">
-        {session.kind === "walkin"
-          ? "Bo'sh stolga o'tkazilsa, vaqt hozirdan boshlanadi. Bar buyurtmalari saqlanadi."
-          : "Hisob boshqa bo'sh stolga o'tadi. Narx o'zgarmaydi."}
+        {session.kind === "walkin" ? t("transfer.walkin") : t("transfer.table")}
       </p>
       <div className="grid grid-cols-3 gap-3">
         {Array.from({ length: tableCount }, (_, i) => i + 1).map((n) => {
@@ -1335,7 +1405,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
                 !current && pick !== n && "bg-key text-fg",
               )}
             >
-              {current ? "shu" : busy ? "band" : n}
+              {current ? t("transfer.current") : busy ? t("transfer.busy") : n}
             </button>
           );
         })}
@@ -1346,18 +1416,20 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
         className="key mt-4 h-12 w-full rounded-full bg-op text-base font-semibold text-on-op disabled:opacity-40"
         onClick={() => pick !== null && useClub.getState().transferTo(sessionId, pick)}
       >
-        Ko'chirish
+        {t("transfer.go")}
       </button>
     </div>
   );
 }
 
 function WalkinSheet() {
+  const t = useT();
   const now = useNow();
   const sessions = useClub((s) => s.sessions.filter((s) => s.kind === "walkin"));
   const roundUp = useClub((s) => s.settings.roundUp);
   const all = useClub((s) => s.sessions);
   const count = all.filter((s) => s.kind === "walkin").length;
+  const label = usePlaceLabel();
   return (
     <div className="pad-safe px-4 pb-4">
       <ul className="divide-y divide-line">
@@ -1373,7 +1445,7 @@ function WalkinSheet() {
                   useClub.getState().popSheet();
                 }}
               >
-                <span className="block text-base font-medium">{sessionLabel(session, count)}</span>
+                <span className="block text-base font-medium">{label(session, count)}</span>
                 <span className="block text-sm tabular-nums text-muted">{formatSom(q.total)}</span>
               </button>
               <button
@@ -1384,7 +1456,7 @@ function WalkinSheet() {
                   useClub.getState().pushSheet({ kind: "close", sessionId: session.id });
                 }}
               >
-                Hisob
+                {t("walkins.bill")}
               </button>
             </li>
           );
@@ -1395,7 +1467,7 @@ function WalkinSheet() {
         className="key mt-4 h-12 w-full rounded-full bg-elev text-base font-semibold text-fg"
         onClick={() => useClub.getState().createWalkin()}
       >
-        + Yangi tashqi
+        {t("walkin.new")}
       </button>
     </div>
   );
@@ -1426,5 +1498,6 @@ function MoneyLine({
 }
 
 function Missing() {
-  return <p className="px-4 pb-6 text-center text-sm text-muted">Bu hisob allaqachon yopilgan.</p>;
+  const t = useT();
+  return <p className="px-4 pb-6 text-center text-sm text-muted">{t("missing")}</p>;
 }

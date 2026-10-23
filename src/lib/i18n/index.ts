@@ -2,6 +2,15 @@
 // other languages may lag and fall back to it key by key.
 // React components use useT() (./use-t.ts); non-React code calls translate() directly.
 import { uz, type Dict, type TKey } from "@/lib/i18n/uz";
+import { uzCyrl } from "@/lib/i18n/uz-Cyrl";
+import { kaa } from "@/lib/i18n/kaa";
+import { ru } from "@/lib/i18n/ru";
+import { en } from "@/lib/i18n/en";
+import { kk } from "@/lib/i18n/kk";
+import { ky } from "@/lib/i18n/ky";
+import { tg } from "@/lib/i18n/tg";
+import { tk } from "@/lib/i18n/tk";
+import { tr } from "@/lib/i18n/tr";
 
 export type { TKey } from "@/lib/i18n/uz";
 
@@ -20,7 +29,18 @@ export const LANGS = [
 
 export type Lang = (typeof LANGS)[number]["id"];
 
-const DICTS: Partial<Record<Lang, Partial<Dict>>> = { uz };
+const DICTS: Partial<Record<Lang, Partial<Dict>>> = {
+  uz,
+  "uz-Cyrl": uzCyrl,
+  kaa,
+  ru,
+  en,
+  kk,
+  ky,
+  tg,
+  tk,
+  tr,
+};
 
 export function registerDict(lang: Lang, dict: Partial<Dict>) {
   DICTS[lang] = dict;
