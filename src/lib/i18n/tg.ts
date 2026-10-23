@@ -141,6 +141,8 @@ export const tg: Partial<Dict> = {
   "theme.dark": "Шаб",
   "settings.name": "Ном",
   "settings.clubName": "Номи клуб",
+  "settings.count": "Шумора",
+  "settings.prices": "Нархҳо",
   "settings.rate": "Нархи соат",
   "settings.vipRate": "Нархи соати VIP",
   "settings.ratesNote": "Ҳисобҳои кушода нархи пешинаро нигоҳ медоранд.",

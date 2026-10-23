@@ -130,6 +130,8 @@ export const uzCyrl: Partial<Dict> = {
   "theme.dark": "Тун",
   "settings.name": "Номи",
   "settings.clubName": "Клуб номи",
+  "settings.count": "Сони",
+  "settings.prices": "Нархлар",
   "settings.rate": "Соат нархи",
   "settings.vipRate": "VIP соат нархи",
   "settings.ratesNote": "Очиқ ҳисобларга янги нарх қўйилмайди.",

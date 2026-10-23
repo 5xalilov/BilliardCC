@@ -141,6 +141,8 @@ export const tk: Partial<Dict> = {
   "theme.dark": "Gije",
   "settings.name": "Ady",
   "settings.clubName": "Klubyň ady",
+  "settings.count": "Sany",
+  "settings.prices": "Bahalar",
   "settings.rate": "Sagatlyk baha",
   "settings.vipRate": "VIP sagatlyk baha",
   "settings.ratesNote": "Açyk hasaplar öňki bahasynda galýar.",

@@ -141,6 +141,8 @@ export const kk: Partial<Dict> = {
   "theme.dark": "Түн",
   "settings.name": "Атауы",
   "settings.clubName": "Клуб атауы",
+  "settings.count": "Саны",
+  "settings.prices": "Бағалар",
   "settings.rate": "Сағат бағасы",
   "settings.vipRate": "VIP сағат бағасы",
   "settings.ratesNote": "Ашық есептер бұрынғы бағамен қалады.",
