@@ -171,6 +171,52 @@ export const ru: Partial<Dict> = {
 
   "help.replay": "Показать подсказки снова",
 
+  "help.center": "Помощь",
+
+  "help.search": "Поиск",
+
+  "help.keys": "Кнопки",
+
+  "help.notFound": "Ничего не найдено",
+
+  "help.contact": "Оставить запрос",
+
+  "help.contactSub": "Не нашли ответ? Напишите нам.",
+
+  "help.docs": "Документы",
+
+  "legal.privacy": "Политика конфиденциальности",
+
+  "legal.offer": "Публичная оферта",
+
+  "legal.updated": "Действует с {date}",
+
+  "support.topic": "Раздел",
+
+  "support.topicOther": "Другое",
+
+  "support.text": "Опишите проблему",
+
+  "support.textPh": "Что случилось и когда?",
+
+  "support.attach": "Добавить скриншот",
+
+  "support.remove": "Убрать",
+
+  "support.send": "Отправить",
+
+  "support.sent": "Запрос отправлен — скоро ответим",
+
+  "support.failed": "Не отправлено — проверьте интернет",
+
+  "support.tooMany": "Сегодня слишком много запросов. Попробуйте завтра.",
+
+  "support.inBot": "Запрос можно отправить только в Telegram. Откройте бота Orde.",
+
+  "support.reply": "Ответ придёт в Telegram.",
+
+  "support.imageBig": "Слишком большое изображение",
+
   "transfer.walkin": "При переносе на свободное место время начнётся сейчас. Заказы бара сохранятся.",
   "transfer.table": "Счёт перейдёт на другое свободное место. Цена не изменится.",
   "transfer.current": "здесь",

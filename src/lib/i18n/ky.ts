@@ -171,6 +171,52 @@ export const ky: Partial<Dict> = {
 
   "help.replay": "Кеңештерди кайра көрсөтүү",
 
+  "help.center": "Жардам",
+
+  "help.search": "Издөө",
+
+  "help.keys": "Баскычтар",
+
+  "help.notFound": "Эч нерсе табылган жок",
+
+  "help.contact": "Суроо калтыруу",
+
+  "help.contactSub": "Жооп таппадыңызбы? Бизге жазыңыз.",
+
+  "help.docs": "Документтер",
+
+  "legal.privacy": "Купуялуулук саясаты",
+
+  "legal.offer": "Ачык оферта",
+
+  "legal.updated": "Күчүнө кирген күнү: {date}",
+
+  "support.topic": "Бөлүм",
+
+  "support.topicOther": "Башка",
+
+  "support.text": "Көйгөйдү жазыңыз",
+
+  "support.textPh": "Эмне болду жана качан?",
+
+  "support.attach": "Скриншот кошуу",
+
+  "support.remove": "Алып салуу",
+
+  "support.send": "Жөнөтүү",
+
+  "support.sent": "Суроо жөнөтүлдү — жакында жооп беребиз",
+
+  "support.failed": "Жөнөтүлгөн жок — интернетти текшериңиз",
+
+  "support.tooMany": "Бүгүн суроо өтө көп. Эртең кайталаңыз.",
+
+  "support.inBot": "Суроону Telegram ичинде гана жөнөтүүгө болот. Orde ботун ачыңыз.",
+
+  "support.reply": "Жооп Telegram аркылуу келет.",
+
+  "support.imageBig": "Сүрөт өтө чоң",
+
   "transfer.walkin": "Бош орунга көчкөндө убакыт азыр башталат. Бар заказдары сакталат.",
   "transfer.table": "Эсеп башка бош орунга көчөт. Баа өзгөрбөйт.",
   "transfer.current": "ушул жерде",

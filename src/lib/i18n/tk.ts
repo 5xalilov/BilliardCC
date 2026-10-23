@@ -171,6 +171,52 @@ export const tk: Partial<Dict> = {
 
   "help.replay": "Maslahatlary täzeden görkez",
 
+  "help.center": "Kömek",
+
+  "help.search": "Gözleg",
+
+  "help.keys": "Düwmeler",
+
+  "help.notFound": "Hiç zat tapylmady",
+
+  "help.contact": "Haýyş galdyrmak",
+
+  "help.contactSub": "Jogap tapmadyňyzmy? Bize ýazyň.",
+
+  "help.docs": "Resminamalar",
+
+  "legal.privacy": "Gizlinlik syýasaty",
+
+  "legal.offer": "Köpçülikleýin oferta",
+
+  "legal.updated": "Güýje giren senesi: {date}",
+
+  "support.topic": "Bölüm",
+
+  "support.topicOther": "Başga",
+
+  "support.text": "Meseläni ýazyň",
+
+  "support.textPh": "Näme boldy we haçan?",
+
+  "support.attach": "Skrinşot goşmak",
+
+  "support.remove": "Aýyrmak",
+
+  "support.send": "Ibermek",
+
+  "support.sent": "Haýyş iberildi — ýakyn wagtda jogap bereris",
+
+  "support.failed": "Iberilmedi — interneti barlaň",
+
+  "support.tooMany": "Şu gün haýyş gaty köp. Ertir synanyşyň.",
+
+  "support.inBot": "Haýyşy diňe Telegram-yň içinde iberip bolýar. Orde botuny açyň.",
+
+  "support.reply": "Jogap Telegram arkaly geler.",
+
+  "support.imageBig": "Surat gaty uly",
+
   "transfer.walkin": "Boş ýere geçende wagt häzir başlaýar. Bar sargytlary saklanýar.",
   "transfer.table": "Hasap başga boş ýere geçýär. Baha üýtgemeýär.",
   "transfer.current": "şu ýerde",

@@ -20,6 +20,7 @@ import {
   type UnitConfig,
 } from "@/lib/club/logic";
 import type { SyncResult } from "@/lib/club/cloud";
+import type { LegalDoc } from "@/lib/club/legal";
 import { placeLabel } from "@/lib/club/labels";
 import { translate, type TKey, type TVars } from "@/lib/i18n";
 
@@ -42,7 +43,12 @@ export type Sheet =
   | { id: string; kind: "unit"; n: number }
   | { id: string; kind: "product"; itemId: string | null }
   | { id: string; kind: "pick"; field: PickField; n?: number }
-  | { id: string; kind: "settingsPage"; page: SettingsPage };
+  | { id: string; kind: "settingsPage"; page: SettingsPage }
+  | { id: string; kind: "helpCat"; cat: string }
+  | { id: string; kind: "helpArticle"; cat: string; article: string }
+  | { id: string; kind: "helpKeys" }
+  | { id: string; kind: "support"; topic?: string }
+  | { id: string; kind: "legal"; doc: LegalDoc };
 
 export type SheetInput =
   | { kind: "bar" }
@@ -63,7 +69,12 @@ export type SheetInput =
   | { kind: "unit"; n: number }
   | { kind: "product"; itemId: string | null }
   | { kind: "pick"; field: PickField; n?: number }
-  | { kind: "settingsPage"; page: SettingsPage };
+  | { kind: "settingsPage"; page: SettingsPage }
+  | { kind: "helpCat"; cat: string }
+  | { kind: "helpArticle"; cat: string; article: string }
+  | { kind: "helpKeys" }
+  | { kind: "support"; topic?: string }
+  | { kind: "legal"; doc: LegalDoc };
 
 // Single-choice picker sheets opened from settings (iOS-style list with a check mark).
 export type PickField = "lang" | "business" | "unitKind";

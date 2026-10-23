@@ -171,6 +171,52 @@ export const tr: Partial<Dict> = {
 
   "help.replay": "İpuçlarını tekrar göster",
 
+  "help.center": "Yardım",
+
+  "help.search": "Ara",
+
+  "help.keys": "Tuşlar",
+
+  "help.notFound": "Hiçbir şey bulunamadı",
+
+  "help.contact": "Talep bırak",
+
+  "help.contactSub": "Cevap bulamadınız mı? Bize yazın.",
+
+  "help.docs": "Belgeler",
+
+  "legal.privacy": "Gizlilik politikası",
+
+  "legal.offer": "Kamuya açık teklif",
+
+  "legal.updated": "Yürürlük tarihi: {date}",
+
+  "support.topic": "Konu",
+
+  "support.topicOther": "Diğer",
+
+  "support.text": "Sorunu yazın",
+
+  "support.textPh": "Ne oldu ve ne zaman?",
+
+  "support.attach": "Ekran görüntüsü ekle",
+
+  "support.remove": "Kaldır",
+
+  "support.send": "Gönder",
+
+  "support.sent": "Talep gönderildi — yakında yanıt vereceğiz",
+
+  "support.failed": "Gönderilemedi — interneti kontrol edin",
+
+  "support.tooMany": "Bugün çok fazla talep var. Yarın tekrar deneyin.",
+
+  "support.inBot": "Talep yalnızca Telegram içinde gönderilebilir. Orde botunu açın.",
+
+  "support.reply": "Yanıt Telegram üzerinden gelir.",
+
+  "support.imageBig": "Görsel çok büyük",
+
   "transfer.walkin": "Boş bir yere taşınınca süre şimdi başlar. Bar siparişleri kalır.",
   "transfer.table": "Hesap başka bir boş yere taşınır. Ücret değişmez.",
   "transfer.current": "burada",

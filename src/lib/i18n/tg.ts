@@ -171,6 +171,52 @@ export const tg: Partial<Dict> = {
 
   "help.replay": "Маслиҳатҳоро боз нишон додан",
 
+  "help.center": "Кумак",
+
+  "help.search": "Ҷустуҷӯ",
+
+  "help.keys": "Тугмаҳо",
+
+  "help.notFound": "Ҳеҷ чиз ёфт нашуд",
+
+  "help.contact": "Дархост гузоштан",
+
+  "help.contactSub": "Ҷавоб наёфтед? Ба мо нависед.",
+
+  "help.docs": "Ҳуҷҷатҳо",
+
+  "legal.privacy": "Сиёсати махфият",
+
+  "legal.offer": "Офертаи оммавӣ",
+
+  "legal.updated": "Аз санаи {date} эътибор дорад",
+
+  "support.topic": "Бахш",
+
+  "support.topicOther": "Дигар",
+
+  "support.text": "Мушкилро нависед",
+
+  "support.textPh": "Чӣ шуд ва кай?",
+
+  "support.attach": "Илова кардани скриншот",
+
+  "support.remove": "Нест кардан",
+
+  "support.send": "Фиристодан",
+
+  "support.sent": "Дархост фиристода шуд — ба наздикӣ ҷавоб медиҳем",
+
+  "support.failed": "Фиристода нашуд — интернетро санҷед",
+
+  "support.tooMany": "Имрӯз дархост хеле зиёд аст. Фардо кӯшиш кунед.",
+
+  "support.inBot": "Дархостро танҳо дар Telegram фиристодан мумкин аст. Боти Orde-ро кушоед.",
+
+  "support.reply": "Ҷавоб тавассути Telegram меояд.",
+
+  "support.imageBig": "Тасвир хеле калон аст",
+
   "transfer.walkin": "Ҳангоми интиқол ба ҷойи холӣ вақт ҳозир оғоз мешавад. Фармоишҳои бар боқӣ мемонанд.",
   "transfer.table": "Ҳисоб ба ҷойи холии дигар мегузарад. Нарх тағйир намеёбад.",
   "transfer.current": "ин ҷо",

@@ -174,6 +174,52 @@ export const xorazm: Partial<Dict> = {
 
   "help.replay": "Go'rsatmani qaytadan go'rmak",
 
+  "help.center": "Yordam",
+
+  "help.search": "Izlamaq",
+
+  "help.keys": "Tugmalar",
+
+  "help.notFound": "Hech zat tapilmadi",
+
+  "help.contact": "So'rav qoldirmaq",
+
+  "help.contactSub": "Javap tapmadingizmi? Bizga yazing.",
+
+  "help.docs": "Hujjatlar",
+
+  "legal.privacy": "Maxfiylik siyasati",
+
+  "legal.offer": "Ommaviy oferta",
+
+  "legal.updated": "Kuchga kirgan sana: {date}",
+
+  "support.topic": "Bo'lim",
+
+  "support.topicOther": "Basqa",
+
+  "support.text": "Muammoni yazing",
+
+  "support.textPh": "Nima bo'ldi va qachan?",
+
+  "support.attach": "Skrinshot qo'shmaq",
+
+  "support.remove": "Olib tashlamaq",
+
+  "support.send": "Yubormaq",
+
+  "support.sent": "So'rav yuborildi — tez orada javap veramiz",
+
+  "support.failed": "Yuborilmadi — internetni tekshiring",
+
+  "support.tooMany": "Bugun so'rav juda ko'p. Ertaga urinib go'ring.",
+
+  "support.inBot": "So'rav faqat Telegram ichida yuboriladi. Orde botini aching.",
+
+  "support.reply": "Javap Telegram orqali galadi.",
+
+  "support.imageBig": "Rasm juda katta",
+
   "transfer.walkin": "Bosh yerga o'tkazilsa, vaxt hozirdan bashlanadi. Bar buyurtmalari saqlanadi.",
   "transfer.table": "Hisab basqa bosh yerga o'tadi. Baha o'zgarmaydi.",
   "transfer.current": "shu",

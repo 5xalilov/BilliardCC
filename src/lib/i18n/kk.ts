@@ -171,6 +171,52 @@ export const kk: Partial<Dict> = {
 
   "help.replay": "Кеңестерді қайта көрсету",
 
+  "help.center": "Көмек",
+
+  "help.search": "Іздеу",
+
+  "help.keys": "Батырмалар",
+
+  "help.notFound": "Ештеңе табылмады",
+
+  "help.contact": "Сұраныс қалдыру",
+
+  "help.contactSub": "Жауап таппадыңыз ба? Бізге жазыңыз.",
+
+  "help.docs": "Құжаттар",
+
+  "legal.privacy": "Құпиялылық саясаты",
+
+  "legal.offer": "Жария оферта",
+
+  "legal.updated": "Күшіне енген күні: {date}",
+
+  "support.topic": "Бөлім",
+
+  "support.topicOther": "Басқа",
+
+  "support.text": "Мәселені жазыңыз",
+
+  "support.textPh": "Не болды және қашан?",
+
+  "support.attach": "Скриншот қосу",
+
+  "support.remove": "Алып тастау",
+
+  "support.send": "Жіберу",
+
+  "support.sent": "Сұраныс жіберілді — жақында жауап береміз",
+
+  "support.failed": "Жіберілмеді — интернетті тексеріңіз",
+
+  "support.tooMany": "Бүгін сұраныс тым көп. Ертең қайталаңыз.",
+
+  "support.inBot": "Сұранысты тек Telegram ішінде жіберуге болады. Orde ботын ашыңыз.",
+
+  "support.reply": "Жауап Telegram арқылы келеді.",
+
+  "support.imageBig": "Сурет тым үлкен",
+
   "transfer.walkin": "Бос орынға көшірсеңіз, уақыт қазір басталады. Бар тапсырыстары сақталады.",
   "transfer.table": "Есеп басқа бос орынға көшеді. Баға өзгермейді.",
   "transfer.current": "осы",

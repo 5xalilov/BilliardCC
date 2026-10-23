@@ -172,6 +172,52 @@ export const kaa: Partial<Dict> = {
 
   "help.replay": "Keńeslerdi qayta kórsetiw",
 
+  "help.center": "Járdem",
+
+  "help.search": "Izlew",
+
+  "help.keys": "Túymeler",
+
+  "help.notFound": "Hesh nárse tabılmadı",
+
+  "help.contact": "Soraw qaldırıw",
+
+  "help.contactSub": "Juwap tappadıńız ba? Bizge jazıń.",
+
+  "help.docs": "Hújjetler",
+
+  "legal.privacy": "Qupıyalılıq siyasatı",
+
+  "legal.offer": "Ashıq oferta",
+
+  "legal.updated": "Kúshke kirgen sánesi: {date}",
+
+  "support.topic": "Bólim",
+
+  "support.topicOther": "Basqa",
+
+  "support.text": "Mashqalanı jazıń",
+
+  "support.textPh": "Ne boldı hám qashan?",
+
+  "support.attach": "Skrinshot qosıw",
+
+  "support.remove": "Alıp taslaw",
+
+  "support.send": "Jiberiw",
+
+  "support.sent": "Soraw jiberildi — tez arada juwap beremiz",
+
+  "support.failed": "Jiberilmedi — internetti tekseriń",
+
+  "support.tooMany": "Búgin soraw júdá kóp. Erteń qaytalań.",
+
+  "support.inBot": "Sorawdı tek Telegram ishinde jiberiw múmkin. Orde botın ashıń.",
+
+  "support.reply": "Juwap Telegram arqalı keledi.",
+
+  "support.imageBig": "Súwret júdá úlken",
+
   "transfer.walkin": "Bos orınǵa kóshirgende waqıt házir baslanadı. Bar buyırtpaları saqlanadı.",
   "transfer.table": "Esap basqa bos orınǵa ótedi. Baha ózgermeydi.",
   "transfer.current": "usı jerde",
