@@ -302,6 +302,7 @@ export const uzCyrl: Partial<Dict> = {
   "support.send": "Юбориш",
   "support.sent": "Сўров юборилди — тез орада жавоб берамиз",
   "support.failed": "Юборилмади — интернетни текширинг",
+  "support.notDelivered": "Етказилмади — ботга ёзинг",
   "support.tooMany": "Бугун жуда кўп сўров. Эртага уриниб кўринг.",
   "support.inBot": "Сўров фақат Телеграм ичида юборилади. Orde ботини очинг.",
   "support.reply": "Жавоб Телеграм орқали келади.",

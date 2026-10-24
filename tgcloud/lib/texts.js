@@ -2,15 +2,16 @@
 
 export const BOT_PROFILE = {
   // @BotFather → Edit Bot → Edit About (≤120)
-  short_description: "Bilyard klub kassasi: stollar vaqti, bar va hisob — bitta oynada. Bepul 3 stolgacha.",
+  short_description: "Soatbay ishlaydigan klublar uchun kassa: vaqt, bar va hisob bitta oynada. 3 tagacha stol — bepul.",
   // @BotFather → Edit Bot → Edit Description (≤512), shown before the first /start
   description:
-    "Orde — bilyard klub uchun kassa.\n\n" +
-    "• Stolni bosing — vaqt boshlanadi, yana bosing — hisob\n" +
-    "• Bar buyurtmalari, chegirma, pauza, VIP narx\n" +
-    "• Naqd, karta yoki aralash to'lov, kunlik tarix\n" +
-    "• Kun va tun rejimi\n\n" +
-    "Bepul: 3 tagacha stol. Premium: 30 tagacha.",
+    "Orde — vaqt bilan ishlaydigan klublar uchun kassa: bilyard, PlayStation, tennis, karaoke, kompyuter klubi va boshqalar.\n\n" +
+    "⏱ Stolni bosing — vaqt boshlanadi, yana bosing — hisob tayyor\n" +
+    "🍹 Bar buyurtmalari, chegirma, pauza, VIP narx\n" +
+    "💳 Naqd, karta yoki aralash to'lov, kunlik tarix\n" +
+    "🌗 Kunduzgi va tungi rejim, 11 tilda\n\n" +
+    "Bepul: 3 tagacha stol. Premium: 30 tagacha.\n" +
+    "Boshlash uchun «Start» tugmasini bosing.",
   commands: [
     { command: 'start', description: 'Kassani ochish' },
     { command: 'premium', description: 'Premium haqida' },

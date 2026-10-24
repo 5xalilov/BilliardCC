@@ -24,6 +24,8 @@ export default async function (input, ctx) {
   if ((await requestsToday(user.id)) >= SUPPORT_DAILY_LIMIT) {
     throw new EndpointError('Too many requests', { code: 'RATE_LIMIT' });
   }
-  const id = await createSupportRequest(user, { topic, text, lang, image });
+  const { id, delivered } = await createSupportRequest(user, { topic, text, lang, image });
+  // Nobody got it in Telegram: tell the sender instead of showing "sent".
+  if (delivered === 0) throw new EndpointError('Not delivered', { code: 'NOT_DELIVERED' });
   return { id };
 }

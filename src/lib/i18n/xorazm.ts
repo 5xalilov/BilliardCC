@@ -212,6 +212,8 @@ export const xorazm: Partial<Dict> = {
 
   "support.failed": "Yuborilmadi — internetni tekshiring",
 
+  "support.notDelivered": "Yetkazilmadi — botga yozing",
+
   "support.tooMany": "Bugun so'rav juda ko'p. Ertaga urinib go'ring.",
 
   "support.inBot": "So'rav faqat Telegram ichida yuboriladi. Orde botini aching.",

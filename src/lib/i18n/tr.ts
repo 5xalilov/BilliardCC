@@ -209,6 +209,8 @@ export const tr: Partial<Dict> = {
 
   "support.failed": "Gönderilemedi — interneti kontrol edin",
 
+  "support.notDelivered": "İletilemedi — bota yazın",
+
   "support.tooMany": "Bugün çok fazla talep var. Yarın tekrar deneyin.",
 
   "support.inBot": "Talep yalnızca Telegram içinde gönderilebilir. Orde botunu açın.",

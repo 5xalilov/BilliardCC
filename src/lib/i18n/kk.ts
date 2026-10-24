@@ -209,6 +209,8 @@ export const kk: Partial<Dict> = {
 
   "support.failed": "Жіберілмеді — интернетті тексеріңіз",
 
+  "support.notDelivered": "Жеткізілмеді — ботқа жазыңыз",
+
   "support.tooMany": "Бүгін сұраныс тым көп. Ертең қайталаңыз.",
 
   "support.inBot": "Сұранысты тек Telegram ішінде жіберуге болады. Orde ботын ашыңыз.",

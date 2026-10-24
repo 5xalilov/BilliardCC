@@ -225,6 +225,8 @@ export const uz = {
 
   "support.failed": "Yuborilmadi — internetni tekshiring",
 
+  "support.notDelivered": "Yetkazilmadi — botga yozing",
+
   "support.tooMany": "Bugun juda ko'p so'rov. Ertaga urinib ko'ring.",
 
   "support.inBot": "So'rov faqat Telegram ichida yuboriladi. Orde botini oching.",
