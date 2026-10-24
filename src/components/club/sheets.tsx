@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   Check,
   ChevronLeft,
@@ -65,6 +65,23 @@ export function SheetHost() {
   const t = useT();
   const sheets = useClub((s) => s.sheets);
   const pop = useClub((s) => s.popSheet);
+  // Sheets that just closed stay mounted for one slide-down before they leave the DOM. Worked
+  // out during render, so the closing sheet never drops out for a frame.
+  const [prevSheets, setPrevSheets] = useState(sheets);
+  const [leaving, setLeaving] = useState<Sheet[]>([]);
+  if (prevSheets !== sheets) {
+    const gone = prevSheets.filter((p) => !sheets.some((s) => s.id === p.id));
+    setPrevSheets(sheets);
+    if (gone.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLeaving((l) => [...l, ...gone]);
+    }
+  }
+
+  useEffect(() => {
+    if (!leaving.length) return;
+    const id = window.setTimeout(() => setLeaving([]), SHEET_EXIT_MS);
+    return () => window.clearTimeout(id);
+  }, [leaving]);
 
   useEffect(() => {
     if (!sheets.length) return;
@@ -75,26 +92,58 @@ export function SheetHost() {
     };
   }, [sheets.length]);
 
-  if (!sheets.length) return null;
+  if (!sheets.length && !leaving.length) return null;
+  const open = sheets.length > 0;
 
   return (
-    <div className="fixed inset-0 z-40">
+    <div className={cn("fixed inset-0 z-40", !open && "pointer-events-none")}>
       <button
         type="button"
-        className="absolute inset-0 bg-scrim"
+        className={cn("scrim absolute inset-0 bg-scrim", !open && "opacity-0")}
         aria-label={t("common.back")}
+        tabIndex={open ? undefined : -1}
         onClick={pop}
       />
       <div className="pointer-events-none relative z-10 mx-auto h-full w-full max-w-md">
-        {sheets.map((sheet, index) => (
-          <SheetFrame key={sheet.id} sheet={sheet} index={index} count={sheets.length} />
-        ))}
+        {[
+          ...sheets.map((sheet, index) => (
+            <SheetFrame key={sheet.id} sheet={sheet} index={index} count={sheets.length} />
+          )),
+          // Same list and keys, so a closing sheet keeps its DOM (and scroll) while it slides out.
+          ...leaving.map((sheet) => (
+            <SheetFrame key={sheet.id} sheet={sheet} index={sheets.length + 1} count={0} leaving />
+          )),
+        ]}
       </div>
     </div>
   );
 }
 
-function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; count: number }) {
+const SHEET_EXIT_MS = 300;
+
+// A closing sheet still renders its body while it slides away; if that body depends on data
+// already gone (a closed bill, say), it just slides away empty.
+class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function SheetFrame({
+  sheet,
+  index,
+  count,
+  leaving = false,
+}: {
+  sheet: Sheet;
+  index: number;
+  count: number;
+  leaving?: boolean;
+}) {
   const top = index === count - 1;
   const depth = count - 1 - index;
   const [shown, setShown] = useState(() => {
@@ -110,6 +159,11 @@ function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; coun
 
   const shift = top ? 0 : -16 * depth;
   const scale = top ? 1 : 1 - Math.min(depth, 3) * 0.045;
+  const transform = leaving
+    ? "translateY(110%)"
+    : shown || !top
+      ? `translateY(${shift}px) scale(${scale})`
+      : "translateY(110%)";
 
   return (
     <section
@@ -118,16 +172,19 @@ function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; coun
         zIndex: index,
         transformOrigin: "bottom center",
         pointerEvents: top ? "auto" : "none",
-        transform: shown || !top ? `translateY(${shift}px) scale(${scale})` : "translateY(110%)",
+        transform,
       }}
       role={top ? "dialog" : undefined}
       aria-modal={top ? true : undefined}
       aria-hidden={!top}
+      inert={leaving || undefined}
     >
       <SheetHeader sheet={sheet} stacked={count > 1 && top} />
-      {top ? (
+      {top || leaving ? (
         <div className="sheet-body">
-          <SheetBody sheet={sheet} />
+          <Quiet>
+            <SheetBody sheet={sheet} />
+          </Quiet>
         </div>
       ) : null}
     </section>
@@ -321,7 +378,7 @@ function BarSheet() {
               onClick={() => useClub.getState().focusSession(session.id)}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-left",
-                on ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+                on ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
               )}
             >
               <span className="block text-sm font-semibold">{label(session, walkins)}</span>
@@ -350,7 +407,7 @@ function BarSheet() {
             onClick={() => setCategory(item.id)}
             className={cn(
               "key shrink-0 rounded-full px-4 py-2 text-sm",
-              category === item.id ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+              category === item.id ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
             )}
           >
             {t(`cat.${item.id}`)}
@@ -450,7 +507,7 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
             onClick={() => setPct(value)}
             className={cn(
               "key aspect-square rounded-full text-sm font-semibold",
-              pct === value ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+              pct === value ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
             )}
           >
             {value === 0 ? t("discount.none") : value === 100 ? t("discount.free") : `${value}%`}
@@ -1184,7 +1241,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
             aria-pressed={category === c.id}
             className={cn(
               "key rounded-full py-2 text-sm",
-              category === c.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
+              category === c.id ? "bg-op-tint text-op-ink" : "bg-fn text-fg",
             )}
             onClick={() => setCategory(c.id)}
           >
@@ -1480,7 +1537,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
               className={cn(
                 "key aspect-square rounded-full text-xl",
                 current && "bg-fg text-bg",
-                !current && pick === n && "bg-op-tint text-op-ink key-sel",
+                !current && pick === n && "bg-op-tint text-op-ink",
                 !current && pick !== n && "bg-key text-fg",
               )}
             >

@@ -210,7 +210,7 @@ function ClubScreen() {
       >
         <button
           type="button"
-          className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
+          className="key key-3d flex size-12 items-center justify-center rounded-full bg-key text-fg"
           aria-label={t("aria.history")}
           onClick={() => useClub.getState().pushSheet({ kind: "history" })}
         >
@@ -219,7 +219,7 @@ function ClubScreen() {
         <p className="max-w-40 truncate text-center text-sm text-muted">{settings.clubName}</p>
         <button
           type="button"
-          className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
+          className="key key-3d flex size-12 items-center justify-center rounded-full bg-key text-fg"
           aria-label={t("aria.settings")}
           onClick={() => useClub.getState().pushSheet({ kind: "settings" })}
         >
@@ -408,8 +408,9 @@ function TableGrid({
   const compact = cols > 3;
   return (
     <div className="absolute inset-0" data-tour="tables">
-      {/* 4px of bleed so a key lifted by the key menu isn't clipped by the scroll box. */}
-      <div className="no-scrollbar absolute -inset-1 overflow-y-auto p-1">
+      {/* Bleed so a lifted key and the keys' soft shadows aren't clipped by the scroll box; the
+          bottom bleed fills the grid gap below. */}
+      <div className="no-scrollbar absolute -inset-x-1.5 -top-1.5 -bottom-3 overflow-y-auto px-1.5 pb-3 pt-1.5">
         <div
           className={cn("grid", compact ? "gap-2" : "gap-3")}
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
@@ -472,7 +473,7 @@ function TableKey({
           useClub.getState().pressTable(n);
         }}
         style={keyStyle(lifted)}
-        className="key relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
+        className="key key-3d relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
       >
         <span className={cn(labelClass("digit", false, compact), "leading-none")}>{n}</span>
         {locked ? (
@@ -520,12 +521,12 @@ function keyStyle(lifted: boolean | undefined, order?: number): CSSProperties {
   return { ...style, scale: "1.08", zIndex: 60, ["--key-shadow" as string]: "0 14px 36px rgb(0 0 0 / 0.45)" };
 }
 
-// Noton tartibi: to'liq yashil — asosiy amal (HISOB) va faol amal tugmasi; boshqa amallar — och yashil;
-// tanlangan stol/tugma — och yashil fon + yashil halqa (key-sel).
-function toneClass(tone: "num" | "fn" | "op" | "primary", active: boolean) {
-  if (active && (tone === "op" || tone === "primary")) return "bg-op text-on-op";
-  if (active) return "bg-op-tint text-op-ink key-sel";
-  if (tone === "primary") return "bg-op text-on-op";
+// Noton tartibi: to'liq yashil — asosiy amal (HISOB), faol tugma va tanlangan stol; boshqa amallar —
+// och yashil. Stol holati halqa emas, fon rangi: ishlayotgani yashil, pauzadagisi sariq.
+function toneClass(tone: "num" | "fn" | "op" | "primary", active: boolean, state?: "live" | "paused") {
+  if (active || tone === "primary") return "bg-op text-on-op";
+  if (state === "live") return "bg-live-fill text-fg";
+  if (state === "paused") return "bg-pause-fill text-fg";
   if (tone === "op") return "bg-op-tint text-op-ink";
   if (tone === "fn") return "bg-fn text-fg";
   return "bg-key text-fg";
@@ -590,10 +591,8 @@ function Key({
       }}
       style={{ ...keyStyle(slot?.lifted, slot?.order), ...arrangeStyle }}
       className={cn(
-        "key relative flex aspect-square items-center justify-center rounded-full",
-        toneClass(tone, Boolean(active)),
-        live && "key-live",
-        paused && "key-paused",
+        "key key-3d relative flex aspect-square items-center justify-center rounded-full",
+        toneClass(tone, Boolean(active), live ? "live" : paused ? "paused" : undefined),
         arrangeClass,
       )}
     >
@@ -610,7 +609,7 @@ function Key({
               className={cn(
                 "mt-1 font-medium leading-none tabular-nums",
                 compact ? "text-[10px]" : "text-xs",
-                active ? "text-op-ink" : live ? "text-live" : paused ? "text-warn" : "text-muted",
+                active ? "text-on-op/85" : live ? "text-op-ink" : paused ? "text-warn" : "text-muted",
               )}
             >
               {sub}
