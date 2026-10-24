@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   Check,
   ChevronLeft,
@@ -65,6 +65,23 @@ export function SheetHost() {
   const t = useT();
   const sheets = useClub((s) => s.sheets);
   const pop = useClub((s) => s.popSheet);
+  // Sheets that just closed stay mounted for one slide-down before they leave the DOM. Worked
+  // out during render, so the closing sheet never drops out for a frame.
+  const [prevSheets, setPrevSheets] = useState(sheets);
+  const [leaving, setLeaving] = useState<Sheet[]>([]);
+  if (prevSheets !== sheets) {
+    const gone = prevSheets.filter((p) => !sheets.some((s) => s.id === p.id));
+    setPrevSheets(sheets);
+    if (gone.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLeaving((l) => [...l, ...gone]);
+    }
+  }
+
+  useEffect(() => {
+    if (!leaving.length) return;
+    const id = window.setTimeout(() => setLeaving([]), SHEET_EXIT_MS);
+    return () => window.clearTimeout(id);
+  }, [leaving]);
 
   useEffect(() => {
     if (!sheets.length) return;
@@ -75,26 +92,58 @@ export function SheetHost() {
     };
   }, [sheets.length]);
 
-  if (!sheets.length) return null;
+  if (!sheets.length && !leaving.length) return null;
+  const open = sheets.length > 0;
 
   return (
-    <div className="fixed inset-0 z-40">
+    <div className={cn("fixed inset-0 z-40", !open && "pointer-events-none")}>
       <button
         type="button"
-        className="absolute inset-0 bg-scrim"
+        className={cn("scrim absolute inset-0 bg-scrim", !open && "opacity-0")}
         aria-label={t("common.back")}
+        tabIndex={open ? undefined : -1}
         onClick={pop}
       />
       <div className="pointer-events-none relative z-10 mx-auto h-full w-full max-w-md">
-        {sheets.map((sheet, index) => (
-          <SheetFrame key={sheet.id} sheet={sheet} index={index} count={sheets.length} />
-        ))}
+        {[
+          ...sheets.map((sheet, index) => (
+            <SheetFrame key={sheet.id} sheet={sheet} index={index} count={sheets.length} />
+          )),
+          // Same list and keys, so a closing sheet keeps its DOM (and scroll) while it slides out.
+          ...leaving.map((sheet) => (
+            <SheetFrame key={sheet.id} sheet={sheet} index={sheets.length + 1} count={0} leaving />
+          )),
+        ]}
       </div>
     </div>
   );
 }
 
-function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; count: number }) {
+const SHEET_EXIT_MS = 300;
+
+// A closing sheet still renders its body while it slides away; if that body depends on data
+// already gone (a closed bill, say), it just slides away empty.
+class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function SheetFrame({
+  sheet,
+  index,
+  count,
+  leaving = false,
+}: {
+  sheet: Sheet;
+  index: number;
+  count: number;
+  leaving?: boolean;
+}) {
   const top = index === count - 1;
   const depth = count - 1 - index;
   const [shown, setShown] = useState(() => {
@@ -110,6 +159,11 @@ function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; coun
 
   const shift = top ? 0 : -16 * depth;
   const scale = top ? 1 : 1 - Math.min(depth, 3) * 0.045;
+  const transform = leaving
+    ? "translateY(110%)"
+    : shown || !top
+      ? `translateY(${shift}px) scale(${scale})`
+      : "translateY(110%)";
 
   return (
     <section
@@ -118,16 +172,19 @@ function SheetFrame({ sheet, index, count }: { sheet: Sheet; index: number; coun
         zIndex: index,
         transformOrigin: "bottom center",
         pointerEvents: top ? "auto" : "none",
-        transform: shown || !top ? `translateY(${shift}px) scale(${scale})` : "translateY(110%)",
+        transform,
       }}
       role={top ? "dialog" : undefined}
       aria-modal={top ? true : undefined}
       aria-hidden={!top}
+      inert={leaving || undefined}
     >
       <SheetHeader sheet={sheet} stacked={count > 1 && top} />
-      {top ? (
+      {top || leaving ? (
         <div className="sheet-body">
-          <SheetBody sheet={sheet} />
+          <Quiet>
+            <SheetBody sheet={sheet} />
+          </Quiet>
         </div>
       ) : null}
     </section>

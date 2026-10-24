@@ -210,7 +210,7 @@ function ClubScreen() {
       >
         <button
           type="button"
-          className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
+          className="key key-3d flex size-12 items-center justify-center rounded-full bg-key text-fg"
           aria-label={t("aria.history")}
           onClick={() => useClub.getState().pushSheet({ kind: "history" })}
         >
@@ -219,7 +219,7 @@ function ClubScreen() {
         <p className="max-w-40 truncate text-center text-sm text-muted">{settings.clubName}</p>
         <button
           type="button"
-          className="key flex size-12 items-center justify-center rounded-full bg-key text-fg"
+          className="key key-3d flex size-12 items-center justify-center rounded-full bg-key text-fg"
           aria-label={t("aria.settings")}
           onClick={() => useClub.getState().pushSheet({ kind: "settings" })}
         >
@@ -472,7 +472,7 @@ function TableKey({
           useClub.getState().pressTable(n);
         }}
         style={keyStyle(lifted)}
-        className="key relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
+        className="key key-3d relative flex aspect-square items-center justify-center rounded-full bg-key/40 text-fg/35"
       >
         <span className={cn(labelClass("digit", false, compact), "leading-none")}>{n}</span>
         {locked ? (
@@ -590,7 +590,7 @@ function Key({
       }}
       style={{ ...keyStyle(slot?.lifted, slot?.order), ...arrangeStyle }}
       className={cn(
-        "key relative flex aspect-square items-center justify-center rounded-full",
+        "key key-3d relative flex aspect-square items-center justify-center rounded-full",
         toneClass(tone, Boolean(active)),
         live && "key-live",
         paused && "key-paused",
