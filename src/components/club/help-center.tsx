@@ -207,15 +207,18 @@ export function HelpKeysSheet() {
 }
 
 // Screenshots are re-encoded on the device: JPEG, longest side ≤ 1280 px, so a request
-// stays small enough for the Telegram Serverless call.
-const IMAGE_LIMIT = 600_000; // base64 characters
+// stays small enough for the Telegram Serverless call (larger bodies failed before reaching
+// the endpoint). Keep in step with SUPPORT_IMAGE_MAX in tgcloud/lib/support.js.
+const IMAGE_LIMIT = 280_000; // base64 characters
 
 async function compressImage(file: File): Promise<string | null> {
   const bitmap = await createImageBitmap(file);
   for (const [side, quality] of [
-    [1280, 0.72],
-    [960, 0.6],
+    [1280, 0.7],
+    [1080, 0.62],
+    [900, 0.55],
     [720, 0.5],
+    [600, 0.45],
   ] as const) {
     const scale = Math.min(1, side / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
@@ -259,8 +262,17 @@ export function SupportSheet({ topic }: { topic?: string }) {
       toast(t("support.sent"));
       useClub.getState().popSheet();
     } catch (err) {
+      console.error("supportRequest", err);
       const code = (err as { parameters?: { code?: string } }).parameters?.code;
-      toast(t(code === "RATE_LIMIT" ? "support.tooMany" : code === "IMAGE_TOO_BIG" ? "support.imageBig" : "support.failed"));
+      const key =
+        code === "RATE_LIMIT"
+          ? "support.tooMany"
+          : code === "IMAGE_TOO_BIG"
+            ? "support.imageBig"
+            : code === "NOT_DELIVERED"
+              ? "support.notDelivered"
+              : "support.failed";
+      toast(t(key));
     } finally {
       setBusy(false);
     }

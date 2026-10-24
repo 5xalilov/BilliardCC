@@ -209,6 +209,8 @@ export const tk: Partial<Dict> = {
 
   "support.failed": "Iberilmedi — interneti barlaň",
 
+  "support.notDelivered": "Gowşurylmady — bota ýazyň",
+
   "support.tooMany": "Şu gün haýyş gaty köp. Ertir synanyşyň.",
 
   "support.inBot": "Haýyşy diňe Telegram-yň içinde iberip bolýar. Orde botuny açyň.",

@@ -209,6 +209,8 @@ export const ru: Partial<Dict> = {
 
   "support.failed": "Не отправлено — проверьте интернет",
 
+  "support.notDelivered": "Не доставлено — напишите нам в бот",
+
   "support.tooMany": "Сегодня слишком много запросов. Попробуйте завтра.",
 
   "support.inBot": "Запрос можно отправить только в Telegram. Откройте бота Orde.",

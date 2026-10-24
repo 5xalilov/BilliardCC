@@ -8,7 +8,9 @@ import { displayName, touchClub } from './clubs.js';
 
 export const SUPPORT_DAILY_LIMIT = 5;
 export const SUPPORT_TEXT_MAX = 2000;
-export const SUPPORT_IMAGE_MAX = 600_000; // base64 characters (~450 KB JPEG)
+// base64 characters (~210 KB JPEG). Serverless calls with much larger bodies were seen to fail
+// before the endpoint ran, so the Mini App compresses below this.
+export const SUPPORT_IMAGE_MAX = 300_000;
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const B64_INDEX = new Map([...B64].map((c, i) => [c, i]));
@@ -28,17 +30,32 @@ export function decodeBase64(text) {
       out[n++] = (value >> bits) & 0xff;
     }
   }
-  return out.subarray(0, n);
+  // A copy, not a view: the upload must not carry the unused tail of the buffer.
+  return out.slice(0, n);
 }
 
 export async function requestsToday(ownerId) {
   const row = await db.get(sql`
-    SELECT count(*) AS n FROM support_requests WHERE owner_id = ${ownerId} AND created_at > unixepoch() - 86400
+    SELECT count(*) AS n FROM support_requests
+    WHERE owner_id = ${ownerId} AND created_at > unixepoch() - 86400 AND status = 'sent'
   `);
   return Number(row?.n ?? 0);
 }
 
-// Saves the request and sends it to every admin. Returns the request id.
+// Sends the screenshot as a photo; if Telegram refuses it as a photo, as a file.
+async function sendScreenshot(chat_id, bytes, id) {
+  const file = () => new InputFile(bytes, `sorov-${id}.jpg`, { type: 'image/jpeg' });
+  const caption = `#${id} skrinshot`;
+  try {
+    await api.sendPhoto({ chat_id, photo: file(), caption });
+  } catch (err) {
+    console.warn(`support #${id}: sendPhoto failed, sending as a document`, err);
+    await api.sendDocument({ chat_id, document: file(), caption });
+  }
+}
+
+// Saves the request and sends it to every admin. Each send is tried on its own, so a failed
+// screenshot never loses the text. Returns the request id and how many admins got the text.
 export async function createSupportRequest(user, { topic, text, lang, image }) {
   const club = await touchClub(user);
   await db.run(sql`
@@ -49,20 +66,39 @@ export async function createSupportRequest(user, { topic, text, lang, image }) {
   const id = row?.id ?? 0;
   const handle = user.username ? ` @${user.username}` : '';
   const place = club?.clubName ? `\nKlub: ${club.clubName}` : '';
-  const message =
+  let photo = null;
+  try {
+    photo = image ? decodeBase64(image) : null;
+  } catch (err) {
+    console.error(`support #${id}: screenshot could not be decoded`, err);
+  }
+  const lost = image && !photo ? "\n\n⚠️ Skrinshot o'qilmadi." : '';
+  const body =
     `🆘 Yordam so'rovi #${id}\n` +
     `${displayName(user)}${handle} (id ${user.id})${place}\n` +
     `Bo'lim: ${topic || '—'} · til: ${lang || '—'}\n\n${text}`;
-  const photo = image ? decodeBase64(image) : null;
+  const message = body.slice(0, 3900) + lost;
+
+  let delivered = 0;
   for (const admin of ADMIN_IDS) {
-    await api.sendMessage({ chat_id: admin, text: message.slice(0, 4000) });
-    if (photo) {
-      await api.sendPhoto({
-        chat_id: admin,
-        photo: new InputFile(photo, `sorov-${id}.jpg`, { type: 'image/jpeg' }),
-        caption: `#${id} skrinshot`,
-      });
+    try {
+      await api.sendMessage({ chat_id: admin, text: message });
+      delivered++;
+    } catch (err) {
+      console.error(`support #${id}: message to admin ${admin} failed`, err);
+      continue;
+    }
+    if (!photo) continue;
+    try {
+      await sendScreenshot(admin, photo, id);
+    } catch (err) {
+      console.error(`support #${id}: screenshot to admin ${admin} failed`, err);
+      await api
+        .sendMessage({ chat_id: admin, text: `#${id}: skrinshotni yuborib bo'lmadi.` })
+        .catch(() => {});
     }
   }
-  return id;
+  const status = delivered > 0 ? 'sent' : 'undelivered';
+  await db.run(sql`UPDATE support_requests SET status = ${status} WHERE id = ${id}`);
+  return { id, delivered };
 }

@@ -209,6 +209,8 @@ export const tg: Partial<Dict> = {
 
   "support.failed": "Фиристода нашуд — интернетро санҷед",
 
+  "support.notDelivered": "Нарасид — ба бот нависед",
+
   "support.tooMany": "Имрӯз дархост хеле зиёд аст. Фардо кӯшиш кунед.",
 
   "support.inBot": "Дархостро танҳо дар Telegram фиристодан мумкин аст. Боти Orde-ро кушоед.",

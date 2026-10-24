@@ -209,6 +209,8 @@ export const en: Partial<Dict> = {
 
   "support.failed": "Not sent — check your internet",
 
+  "support.notDelivered": "Not delivered — write to us in the bot",
+
   "support.tooMany": "Too many requests today. Try again tomorrow.",
 
   "support.inBot": "Requests can only be sent inside Telegram. Open the Orde bot.",

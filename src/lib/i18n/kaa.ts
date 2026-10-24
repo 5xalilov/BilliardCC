@@ -210,6 +210,8 @@ export const kaa: Partial<Dict> = {
 
   "support.failed": "Jiberilmedi — internetti tekseriń",
 
+  "support.notDelivered": "Jetkerilmedi — botqa jazıń",
+
   "support.tooMany": "Búgin soraw júdá kóp. Erteń qaytalań.",
 
   "support.inBot": "Sorawdı tek Telegram ishinde jiberiw múmkin. Orde botın ashıń.",
