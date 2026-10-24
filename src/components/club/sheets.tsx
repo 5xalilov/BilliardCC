@@ -378,7 +378,7 @@ function BarSheet() {
               onClick={() => useClub.getState().focusSession(session.id)}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-left",
-                on ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+                on ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
               )}
             >
               <span className="block text-sm font-semibold">{label(session, walkins)}</span>
@@ -407,7 +407,7 @@ function BarSheet() {
             onClick={() => setCategory(item.id)}
             className={cn(
               "key shrink-0 rounded-full px-4 py-2 text-sm",
-              category === item.id ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+              category === item.id ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
             )}
           >
             {t(`cat.${item.id}`)}
@@ -507,7 +507,7 @@ function DiscountSheet({ sessionId }: { sessionId: string }) {
             onClick={() => setPct(value)}
             className={cn(
               "key aspect-square rounded-full text-sm font-semibold",
-              pct === value ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+              pct === value ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
             )}
           >
             {value === 0 ? t("discount.none") : value === 100 ? t("discount.free") : `${value}%`}
@@ -1241,7 +1241,7 @@ function ProductSheet({ itemId }: { itemId: string | null }) {
             aria-pressed={category === c.id}
             className={cn(
               "key rounded-full py-2 text-sm",
-              category === c.id ? "bg-op-tint text-op-ink key-sel" : "bg-fn text-fg",
+              category === c.id ? "bg-op-tint text-op-ink" : "bg-fn text-fg",
             )}
             onClick={() => setCategory(c.id)}
           >
@@ -1537,7 +1537,7 @@ function TransferSheet({ sessionId }: { sessionId: string }) {
               className={cn(
                 "key aspect-square rounded-full text-xl",
                 current && "bg-fg text-bg",
-                !current && pick === n && "bg-op-tint text-op-ink key-sel",
+                !current && pick === n && "bg-op-tint text-op-ink",
                 !current && pick !== n && "bg-key text-fg",
               )}
             >

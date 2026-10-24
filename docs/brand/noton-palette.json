@@ -20,7 +20,9 @@
       "danger": "#f2878b",
       "danger-fill": "#b83c42",
       "on-danger": "#ffffff",
-      "seg": "#5a546a"
+      "seg": "#5a546a",
+      "live-fill": "#1c4637",
+      "pause-fill": "#4a3a1e"
     },
     "kun": {
       "bg": "#f4f2fa",
@@ -40,7 +42,9 @@
       "danger": "#b42f35",
       "danger-fill": "#b42f35",
       "on-danger": "#ffffff",
-      "seg": "#ffffff"
+      "seg": "#ffffff",
+      "live-fill": "#c2e1cf",
+      "pause-fill": "#efd59e"
     }
   },
   "pairs": [
@@ -198,6 +202,36 @@
       "fg",
       "seg",
       "text"
+    ],
+    [
+      "op-ink",
+      "live-fill",
+      "text"
+    ],
+    [
+      "fg",
+      "live-fill",
+      "large"
+    ],
+    [
+      "warn",
+      "pause-fill",
+      "text"
+    ],
+    [
+      "fg",
+      "pause-fill",
+      "large"
+    ],
+    [
+      "live-fill",
+      "bg",
+      "sep"
+    ],
+    [
+      "pause-fill",
+      "bg",
+      "sep"
     ]
   ],
   "notes": "2026-10-24 dizayn bosqichi: op-tint (ikkinchi darajali amal va tanlangan holat), warn (pauza), danger/danger-fill (bekor qilish), seg (segment tanlovi). Asosiy to'liq yashil faqat asosiy amalda."

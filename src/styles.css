@@ -19,6 +19,8 @@
   --color-op-ink: #4fc99a;
   --color-live: #4fc99a;
   --color-op-tint: #1a4031;
+  --color-live-fill: #1c4637;
+  --color-pause-fill: #4a3a1e;
   --color-warn: #e3ae4e;
   --color-danger: #f2878b;
   --color-danger-fill: #b83c42;
@@ -30,22 +32,18 @@
 }
 
 :root {
-  /* Keys: light from above — a soft top sheen, a lit upper rim, a shaded lower rim and a drop
-     shadow. No outline ring, so neighbouring colours meet without a drawn edge. */
-  --key-hi: rgb(255 255 255 / 0.08);
-  --key-lo: rgb(0 0 0 / 0.2);
-  --key-bevel: inset 0 1px 0 rgb(255 255 255 / 0.09), inset 0 -2px 1px rgb(0 0 0 / 0.22);
-  --key-press: inset 0 2px 6px rgb(0 0 0 / 0.4);
-  --key-shadow: 0 1px 1px rgb(0 0 0 / 0.35), 0 5px 12px rgb(0 0 0 / 0.38);
+  /* Keys: a soft dome — the fill brightens toward the top and a diffuse shadow sits under it.
+     No rim lines or tight shadow, so nothing reads as a drawn edge. */
+  --key-hi: rgb(255 255 255 / 0.07);
+  --key-lo: rgb(0 0 0 / 0.16);
+  --key-shadow: 0 6px 12px -6px rgb(0 0 0 / 0.6);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --key-hi: rgb(255 255 255 / 0.6);
-  --key-lo: rgb(51 39 82 / 0.07);
-  --key-bevel: inset 0 1px 0 rgb(255 255 255 / 0.75), inset 0 -2px 1px rgb(51 39 82 / 0.08);
-  --key-press: inset 0 2px 5px rgb(51 39 82 / 0.16);
-  --key-shadow: 0 1px 1px rgb(51 39 82 / 0.1), 0 4px 10px rgb(51 39 82 / 0.1);
+  --key-hi: rgb(255 255 255 / 0.55);
+  --key-lo: rgb(51 39 82 / 0.06);
+  --key-shadow: 0 6px 12px -6px rgb(51 39 82 / 0.32);
   --color-bg: #f4f2fa;
   --color-sheet: #ffffff;
   --color-key: #ddd7ea;
@@ -59,6 +57,8 @@
   --color-op-ink: #066648;
   --color-live: #087f5b;
   --color-op-tint: #c2e1cf;
+  --color-live-fill: #c2e1cf;
+  --color-pause-fill: #efd59e;
   --color-warn: #7a4f00;
   --color-danger: #b42f35;
   --color-danger-fill: #b42f35;
@@ -69,11 +69,9 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
-    --key-hi: rgb(255 255 255 / 0.6);
-    --key-lo: rgb(51 39 82 / 0.07);
-    --key-bevel: inset 0 1px 0 rgb(255 255 255 / 0.75), inset 0 -2px 1px rgb(51 39 82 / 0.08);
-    --key-press: inset 0 2px 5px rgb(51 39 82 / 0.16);
-    --key-shadow: 0 1px 1px rgb(51 39 82 / 0.1), 0 4px 10px rgb(51 39 82 / 0.1);
+    --key-hi: rgb(255 255 255 / 0.55);
+    --key-lo: rgb(51 39 82 / 0.06);
+    --key-shadow: 0 6px 12px -6px rgb(51 39 82 / 0.32);
     --color-bg: #f4f2fa;
     --color-sheet: #ffffff;
     --color-key: #ddd7ea;
@@ -87,6 +85,8 @@
     --color-op-ink: #066648;
     --color-live: #087f5b;
     --color-op-tint: #c2e1cf;
+    --color-live-fill: #c2e1cf;
+    --color-pause-fill: #efd59e;
     --color-warn: #7a4f00;
     --color-danger: #b42f35;
     --color-danger-fill: #b42f35;
@@ -134,23 +134,22 @@
   -webkit-user-select: none;
 }
 
-/* Filled keys outside the keypad stay flat; --key-ring carries live/selected state. */
+/* Filled keys outside the keypad stay flat; --key-ring only marks an arrange drop target. */
 .key[class*="bg-"] {
   box-shadow: var(--key-ring, 0 0 #0000);
 }
 
 /* Keypad keys: a slightly domed button. The sheen sits over whatever fill the tone gives. */
 .key-3d[class*="bg-"] {
-  background-image: linear-gradient(180deg, var(--key-hi) 0%, transparent 48%, var(--key-lo) 100%);
+  background-image: linear-gradient(180deg, var(--key-hi) 0%, transparent 55%, var(--key-lo) 100%);
   box-shadow:
     var(--key-ring, 0 0 #0000),
-    var(--key-bevel),
     var(--key-shadow);
 }
 
 /* Solid green keys keep their colour true: a fainter sheen. */
 .key-3d.bg-op {
-  --key-hi: rgb(255 255 255 / 0.16);
+  --key-hi: rgb(255 255 255 / 0.14);
 }
 
 @media (hover: hover) {
@@ -163,15 +162,13 @@
   scale: 0.97;
 }
 
-/* Pressed: the key sinks — drop shadow gone, shade moves inside. */
+/* Pressed: the key sinks onto the surface — its shadow goes. */
 .key-3d:active:not(:disabled) {
   translate: 0 1px;
 }
 
 .key-3d:active:not(:disabled)[class*="bg-"] {
-  box-shadow:
-    var(--key-ring, 0 0 #0000),
-    var(--key-press);
+  box-shadow: var(--key-ring, 0 0 #0000);
 }
 
 .key:disabled {
@@ -181,19 +178,6 @@
 
 .key-3d:disabled[class*="bg-"] {
   box-shadow: none;
-}
-
-.key-live {
-  --key-ring: inset 0 0 0 2px var(--color-live);
-}
-
-.key-paused {
-  --key-ring: inset 0 0 0 2px var(--color-warn);
-}
-
-/* Tanlangan stol, chip yoki variant: och yashil fon + yashil halqa (Noton'dagi tanlangan stol kartasi kabi). */
-.key-sel {
-  --key-ring: inset 0 0 0 2px var(--color-live);
 }
 
 /* Sozlamalar (iOS uslubi): guruh ichidagi qatorlar orasida ikonkadan keyin boshlanadigan ingichka chiziq. */

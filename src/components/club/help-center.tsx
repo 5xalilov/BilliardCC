@@ -280,7 +280,7 @@ export function SupportSheet({ topic }: { topic?: string }) {
               onClick={() => setPicked(name)}
               className={cn(
                 "key shrink-0 rounded-full px-4 py-2 text-sm",
-                picked === name ? "bg-op-tint text-op-ink key-sel" : "bg-elev text-fg",
+                picked === name ? "bg-op-tint text-op-ink" : "bg-elev text-fg",
               )}
             >
               {name}
